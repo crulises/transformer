@@ -1,0 +1,46 @@
+% ============================================================
+% fig_hopfield_energia.tex — Paisaje de energía de Hopfield
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.1]
+
+% Ejes
+\draw[-{Stealth}, thick] (-0.3, 0) -- (7.2, 0) node[right, font=\small] {espacio de estados};
+\draw[-{Stealth}, thick] (0, -0.3) -- (0, 4.0) node[above, font=\small] {$E$};
+
+% Curva de energía con varios mínimos locales
+% Fix: usar grados directamente (sin sufijo r) con factores escalados
+\draw[blue!70, very thick, domain=0.2:7.0, samples=200]
+    plot (\x, {
+        0.6*sin(51.43*\x) +
+        0.4*sin(102.86*\x) +
+        0.3*cos(77.14*\x) +
+        1.8
+    });
+
+% Mínimos (patrones almacenados)
+\fill[green!60!black] (1.05, 0.82) circle (3.5pt);
+\fill[green!60!black] (3.55, 0.62) circle (3.5pt);
+\fill[green!60!black] (5.90, 0.95) circle (3.5pt);
+
+\node[green!50!black, font=\footnotesize, above right] at (1.05, 0.82) {patrón $\xi^1$};
+\node[green!50!black, font=\footnotesize, above right] at (3.55, 0.62) {patrón $\xi^2$};
+\node[green!50!black, font=\footnotesize, above right] at (5.90, 0.95) {patrón $\xi^3$};
+
+% Estado inicial ruidoso → convergencia hacia mínimo
+\fill[red!70]    (2.3, 2.85) circle (3pt) node[above, font=\footnotesize, red!70] {entrada ruidosa};
+\draw[-{Stealth}, red!60, thick, dashed]
+    (2.3, 2.85) .. controls (2.1, 2.0) and (1.7, 1.4) .. (1.05, 0.85);
+\node[red!60, font=\tiny] at (1.5, 1.9) {convergencia};
+
+% Etiqueta eje Y
+\node[font=\footnotesize, gray, rotate=90] at (-0.55, 2.0) {Energía $E$};
+
+\end{tikzpicture}
+\caption{Paisaje de energía de una red de Hopfield. Cada mínimo local corresponde
+a un patrón almacenado $\xi^k$. Ante una entrada ruidosa o incompleta, la dinámica
+de la red desciende por el gradiente de energía hasta converger al mínimo más
+cercano, recuperando el patrón original.}
+\label{fig:hopfield_energia}
+\end{figure}

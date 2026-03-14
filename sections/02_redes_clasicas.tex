@@ -1,0 +1,320 @@
+\section{Modelos clásicos de inteligencia artificial y sus limitaciones}
+\label{sec:redes_clasicas}
+
+Esta sección presenta las arquitecturas de redes neuronales abordadas en la
+cátedra, analizando sus principios de funcionamiento y las limitaciones que
+las hacen insuficientes para el procesamiento del lenguaje natural. Al final
+se presenta una tabla comparativa que sintetiza el contraste con la arquitectura
+Transformer.
+
+%------------------------------------------------------------
+\subsection{El perceptrón}
+\label{subsec:perceptron}
+
+El perceptrón es la unidad computacional más elemental de las redes
+neuronales artificiales~\cite{goodfellow2016deeplearning}. Recibe un vector
+de entradas $\bm{x} \in \mathbb{R}^n$, calcula una combinación lineal
+ponderada con pesos $\bm{w}$ y un sesgo $b$, y aplica una función de
+activación $\varphi$ para producir la salida $y$:
+
+\begin{equation}
+    y = \varphi\!\left(\sum_{i=1}^{n} w_i x_i + b\right)
+\end{equation}
+
+\input{figures/fig_perceptron}
+
+El conocimiento del perceptrón reside íntegramente en los pesos $\bm{w}$,
+que se ajustan durante el entrenamiento. Sin embargo, su capacidad
+representacional es fundamentalmente limitada: solo puede producir
+fronteras de decisión lineales en el espacio de entrada. Cualquier problema
+con estructura no lineal —como la función XOR— no puede ser resuelto por
+un único perceptrón. Esta limitación motivó el desarrollo del perceptrón
+multicapa.
+
+%------------------------------------------------------------
+\subsection{El perceptrón multicapa, backpropagation y descenso del gradiente}
+\label{subsec:mlp}
+
+El perceptrón multicapa (MLP) supera las limitaciones del perceptrón simple
+apilando capas de neuronas con funciones de activación no lineales. El teorema
+de aproximación universal establece que un MLP con al menos una capa oculta
+suficientemente amplia puede aproximar cualquier función continua en un
+compacto~\cite{goodfellow2016deeplearning}.
+
+\input{figures/fig_mlp}
+
+\subsubsection*{Backpropagation}
+
+El entrenamiento del MLP se realiza mediante el algoritmo de retropropagación
+del error (\textit{backpropagation}), que calcula eficientemente el gradiente
+de la función de pérdida $\mathcal{L}$ respecto a cada parámetro de la red
+aplicando la regla de la cadena en sentido inverso a través de las capas:
+
+\begin{equation}
+    \frac{\partial \mathcal{L}}{\partial w_{ij}^{(l)}} =
+    \frac{\partial \mathcal{L}}{\partial a_j^{(l)}} \cdot
+    \frac{\partial a_j^{(l)}}{\partial w_{ij}^{(l)}}
+\end{equation}
+
+\noindent donde $a_j^{(l)}$ es la activación de la neurona $j$ en la capa $l$
+y $w_{ij}^{(l)}$ es el peso que la conecta con la neurona $i$ de la capa
+anterior. El proceso recorre la red de salida hacia entrada (\textit{backward}),
+acumulando gradientes en cada capa.
+
+\subsubsection*{Descenso del gradiente}
+
+Los gradientes obtenidos por backpropagation se usan para actualizar los
+parámetros mediante descenso del gradiente. La regla de actualización es:
+
+\begin{equation}
+    w \leftarrow w - \eta \, \frac{\partial \mathcal{L}}{\partial w}
+\end{equation}
+
+\noindent donde $\eta > 0$ es la \textit{tasa de aprendizaje}. Intuitivamente,
+cada actualización mueve los parámetros en la dirección que reduce la pérdida.
+Si $\eta$ es demasiado grande el proceso puede divergir u oscilar; si es
+demasiado pequeño, la convergencia es lenta o puede quedar atrapada en
+mínimos locales subóptimos.
+
+\input{figures/fig_gradient_descent}
+
+\subsubsection*{Limitaciones para el modelado de secuencias}
+
+A pesar de su capacidad expresiva, los MLPs presentan limitaciones
+estructurales que los hacen inadecuados para procesar lenguaje natural:
+
+\begin{itemize}
+    \item \textbf{Entradas de tamaño fijo.} El MLP requiere que la dimensión
+    de la entrada esté fija en el momento del diseño. Para modelar texto,
+    esto implica definir una ventana de contexto de longitud constante,
+    truncando o rellenando todas las secuencias a esa longitud. Esto hace
+    imposible adaptarse a oraciones de longitud variable sin pérdida de
+    información~\cite{bengio2003neural}.
+
+    \item \textbf{Ausencia de codificación del orden.} La posición de cada
+    elemento en el vector de entrada no tiene representación interna
+    diferenciada: si se permutan los elementos, la red no puede distinguir
+    el nuevo orden del original. Para el lenguaje esto es crítico: \textit{``el
+    perro muerde al hombre''} y \textit{``el hombre muerde al perro''} son
+    semánticamente opuestas, pero un MLP que reciba las mismas palabras en
+    distinto orden producirá la misma activación interna si no hay codificación
+    posicional explícita~\cite{goodfellow2016deeplearning}.
+
+    \item \textbf{Sin mecanismo relacional dinámico.} En un MLP los pesos son
+    estáticos: la red no puede decidir en tiempo de inferencia a qué parte de
+    la entrada prestarle más atención según el contexto. Dos palabras pueden
+    ser muy relevantes entre sí en una oración y completamente irrelevantes
+    en otra, pero el modelo las procesa siempre con los mismos pesos.
+
+    \item \textbf{Dependencias limitadas al tamaño de la ventana.} Toda
+    relación que exija considerar elementos separados por más posiciones que
+    el ancho de la ventana es inaccesible para el modelo. En textos largos,
+    esto descarta dependencias fundamentales: el sujeto de una oración puede
+    estar decenas de palabras antes del verbo que lo acompaña~\cite{bengio2003neural}.
+\end{itemize}
+
+%------------------------------------------------------------
+\subsection{Redes de Hopfield}
+\label{subsec:hopfield}
+
+Las redes de Hopfield~\cite{hopfield1982neural} son redes recurrentes
+completamente conectadas diseñadas como modelos de \textit{memoria asociativa}:
+dado un patrón de entrada incompleto o ruidoso, la red recupera el patrón
+almacenado más cercano. Cada unidad $s_i \in \{-1, +1\}$ se conecta
+simétricamente con todas las demás ($w_{ij} = w_{ji}$), y la dinámica del
+sistema minimiza una función de energía global:
+
+\begin{equation}
+    E = -\frac{1}{2} \sum_{i \neq j} w_{ij} \, s_i \, s_j
+\end{equation}
+
+La regla de actualización de cada neurona es:
+
+\begin{equation}
+    s_i \leftarrow \text{sgn}\!\left(\sum_{j} w_{ij} \, s_j\right)
+\end{equation}
+
+La red converge cuando ninguna actualización reduce la energía, es decir,
+cuando alcanza un mínimo local. Estos mínimos corresponden a los patrones
+almacenados durante el entrenamiento. La Figura~\ref{fig:hopfield_energia}
+muestra este paisaje de energía conceptualmente.
+
+\input{figures/fig_hopfield_energia}
+
+\subsubsection*{Ejemplo numérico: recuperación de un patrón}
+
+Para ilustrar el mecanismo, considérese una red de 4 neuronas con un patrón
+almacenado $\xi^1 = [+1,-1,+1,-1]$. Los pesos se calculan mediante la regla
+de Hebb:
+$w_{ij} = \frac{1}{n} \sum_\mu \xi_i^\mu \xi_j^\mu$.
+Si se presenta la entrada ruidosa $\bm{s} = [+1,+1,+1,-1]$ (bit $s_2$
+invertido), la regla de actualización corrige el error en una sola iteración,
+recuperando el patrón original.
+
+\input{figures/fig_hopfield_ejemplo}
+
+\subsubsection*{Conexión con los Transformers}
+
+La red de Hopfield introduce un concepto que reaparecerá de forma central en
+los Transformers: la \textit{influencia global entre unidades}. El estado de
+cada neurona está determinado por el estado de todas las demás, lo que
+constituye una forma primitiva de atención distribuida. Sin embargo, la
+capacidad de almacenamiento clásica es limitada (aproximadamente $0.14n$
+patrones) y el modelo no está diseñado para representar relaciones
+secuenciales. Trabajos recientes han demostrado que el mecanismo de atención
+puede interpretarse como una generalización de Hopfield con capacidad de
+almacenamiento exponencial~\cite{ramsauer2020hopfield}.
+
+%------------------------------------------------------------
+\subsection{Mapas autoorganizados (SOM)}
+\label{subsec:som}
+
+Los mapas autoorganizados (SOM), propuestos por Kohonen~\cite{kohonen1990som},
+son redes no supervisadas que aprenden a proyectar datos de alta dimensión en
+una grilla discreta de baja dimensión (usualmente 2D), preservando la topología
+del espacio original. Cada neurona de la grilla tiene asociado un vector de
+pesos $\bm{w}_i \in \mathbb{R}^d$ del mismo tamaño que los datos de entrada.
+
+\subsubsection*{Proceso de entrenamiento}
+
+En cada iteración se presenta una muestra $\bm{x}$ y se identifican:
+
+\begin{enumerate}
+    \item \textbf{Neurona ganadora (BMU):} aquella cuyo vector de pesos es más
+    cercano a $\bm{x}$ en distancia euclidiana:
+    $c = \arg\min_i \|\bm{x} - \bm{w}_i\|$.
+
+    \item \textbf{Actualización de la BMU y sus vecinas:} los pesos de la BMU
+    y las neuronas en su entorno se acercan a $\bm{x}$:
+    \begin{equation}
+        \bm{w}_i(t{+}1) = \bm{w}_i(t) + \alpha(t)\,h_{ci}(t)\,
+        [\bm{x}(t) - \bm{w}_i(t)]
+    \end{equation}
+    donde $\alpha(t)$ es la tasa de aprendizaje y $h_{ci}(t)$ es la función
+    de vecindad (usualmente gaussiana), que decrece con la distancia en la
+    grilla entre la BMU $c$ y la neurona $i$.
+\end{enumerate}
+
+Tras muchas iteraciones, neuronas contiguas en la grilla responden a entradas
+similares: la topología del espacio de entrada queda reflejada en la grilla 2D.
+
+\input{figures/fig_som_proceso}
+
+\input{figures/fig_som_resultado}
+
+\subsubsection*{Aporte conceptual: representación distribuida}
+
+El aporte fundamental de los SOM es la \textit{representación distribuida y
+topológica}: entidades similares activan regiones contiguas del mapa,
+estableciendo un correlato geométrico de la similitud semántica. Esta idea
+es precursora directa del concepto de \textit{embedding} que describe la
+sección siguiente.
+
+%------------------------------------------------------------
+\subsection{Representaciones distribuidas y embeddings}
+\label{subsec:embeddings}
+
+La idea de representar entidades discretas como vectores continuos,
+introducida conceptualmente por los SOM, se formalizó en el procesamiento
+del lenguaje bajo el nombre de \textit{embedding}~\cite{mikolov2013word2vec}.
+Comprender esta representación es esencial, ya que constituye el primer
+bloque de procesamiento de todo Transformer.
+
+\subsubsection*{Representación one-hot}
+
+La alternativa más simple es la codificación \textit{one-hot}: cada token
+recibe un vector de dimensión $|\mathcal{V}|$ (tamaño del vocabulario) con
+un único componente igual a 1 en la posición correspondiente y 0 en el resto.
+Esta representación es dispersa, no captura ninguna relación semántica entre
+tokens, y la distancia euclídea entre cualquier par de tokens es idéntica
+($\sqrt{2}$), independientemente de su similitud de significado.
+
+\subsubsection*{Proyección mediante una matriz de embeddings}
+
+Un \textit{embedding} proyecta cada token a un vector denso de dimensión
+$d_{\text{model}} \ll |\mathcal{V}|$ mediante una matriz de embeddings
+$E \in \mathbb{R}^{d_{\text{model}} \times |\mathcal{V}|}$, aprendida durante
+el entrenamiento:
+
+\begin{equation}
+    \bm{e}_i = E\,\bm{v}_i \quad \in \mathbb{R}^{d_{\text{model}}}
+\end{equation}
+
+\noindent donde $\bm{v}_i$ es el vector \textit{one-hot} del token $i$.
+Operacionalmente, multiplicar $E$ por un vector \textit{one-hot} equivale a
+seleccionar la columna correspondiente de $E$: el embedding no es más que una
+\textit{tabla de consulta} en la que cada token tiene asignado un vector
+aprendido. En este espacio, tokens semánticamente similares quedan próximos
+entre sí, y ciertas relaciones semánticas se expresan como operaciones
+vectoriales regulares.
+
+\input{figures/fig_proyeccion_embedding}
+
+Los embeddings constituyen el primer bloque de todo Transformer: antes de
+aplicar cualquier operación de atención, cada token de la secuencia de entrada
+es \textit{proyectado} a este espacio continuo aprendido. La calidad de esta
+representación inicial tiene impacto directo en la capacidad del modelo para
+capturar relaciones lingüísticas.
+
+%------------------------------------------------------------
+\subsection{Redes recurrentes: el puente histórico}
+\label{subsec:rnn}
+
+Antes de la aparición de los Transformers, las redes neuronales recurrentes
+(RNNs) y sus variantes —LSTM~\cite{hochreiter1997lstm} y GRU— representaban
+el estado del arte en el modelado de secuencias. Estas arquitecturas
+incorporan un estado oculto $h_t$ que se actualiza en cada paso temporal
+acumulando información de la secuencia pasada:
+
+\begin{equation}
+    h_t = \varphi(W_h \, h_{t-1} + W_x \, x_t + b)
+\end{equation}
+
+Sin embargo, presentan dos problemas estructurales que los Transformers
+resuelven directamente:
+
+\begin{enumerate}
+    \item \textbf{Gradiente desvanecido.} Al propagar el error hacia atrás
+    en el tiempo, el gradiente se multiplica repetidamente por pesos pequeños
+    y se atenúa exponencialmente, haciendo que las dependencias muy lejanas
+    sean virtualmente invisibles para el optimizador.
+
+    \item \textbf{Procesamiento secuencial obligatorio.} El paso $t$ depende
+    del paso $t{-}1$: no hay forma de paralelizar el cómputo sobre la
+    secuencia. En secuencias largas, esto hace el entrenamiento prohibitivamente
+    lento.
+\end{enumerate}
+
+La eliminación de ambas limitaciones es una de las motivaciones centrales
+del diseño de los Transformers.
+
+%------------------------------------------------------------
+\subsection{Síntesis comparativa}
+\label{subsec:comparacion}
+
+La Tabla~\ref{tab:comparacion_clasicos} resume las capacidades de cada
+arquitectura frente a los requisitos del procesamiento del lenguaje natural.
+
+\begin{table}[H]
+\centering
+\caption{Comparación de capacidades de los modelos clásicos frente a los
+requisitos del procesamiento del lenguaje natural.}
+\label{tab:comparacion_clasicos}
+\begin{tabularx}{\textwidth}{lXXXX}
+\toprule
+\textbf{Modelo} & \textbf{Maneja secuencias} & \textbf{Contexto global} & \textbf{Dependencias largas} & \textbf{Paralelizable} \\
+\midrule
+Perceptrón           & No       & No       & No       & Sí      \\
+MLP                  & Limitado & No       & No       & Sí      \\
+Hopfield             & No       & Sí       & No       & No      \\
+SOM                  & No       & No       & No       & Parcial \\
+RNN / LSTM           & Sí       & Parcial  & Limitado & No      \\
+\midrule
+\textbf{Transformer} & \textbf{Sí} & \textbf{Sí} & \textbf{Sí} & \textbf{Sí} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La ausencia de un mecanismo capaz de combinar las cuatro propiedades de la
+última fila es la limitación estructural que motiva la sección siguiente,
+donde se caracteriza el problema del procesamiento del lenguaje natural.

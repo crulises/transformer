@@ -1,0 +1,74 @@
+% ============================================================
+% fig_som_resultado.tex — Resultado: mapa semántico organizado
+% Uso: \input{figures/fig_som_resultado}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.9]
+
+% ─── Antes: datos sin organizar ──────────────────────────────
+\node[font=\small\bfseries, gray] at (2.0, 5.2) {Datos de entrada};
+\node[font=\tiny, gray]           at (2.0, 4.85) {(alta dimensión, sin orden)};
+
+\foreach \x/\y/\col/\lbl in {
+    0.4/4.2/red!60/animal,
+    1.1/3.5/red!60/animal,
+    0.6/3.1/red!60/animal,
+    1.8/4.3/blue!60/vehículo,
+    2.5/3.8/blue!60/vehículo,
+    2.1/3.0/blue!60/vehículo,
+    3.2/4.1/green!60!black/fruta,
+    3.7/3.4/green!60!black/fruta,
+    3.2/2.8/green!60!black/fruta
+}{
+    \fill[\col] (\x,\y) circle (3.5pt);
+}
+\node[font=\tiny, red!70]         at (0.7,  2.65) {animales};
+\node[font=\tiny, blue!70]        at (2.3,  2.65) {vehículos};
+\node[font=\tiny, green!60!black] at (3.5,  2.65) {frutas};
+
+% ─── Flecha central ──────────────────────────────────────────
+\draw[-{Stealth}, very thick, blue!60] (4.4, 3.7) -- (5.4, 3.7);
+\node[font=\small, blue!70, align=center] at (4.9, 4.1) {entrenamiento\\SOM};
+
+% ─── Después: mapa 4×4 organizado ───────────────────────────
+\node[font=\small\bfseries, gray] at (8.5, 5.2) {Mapa SOM resultante};
+\node[font=\tiny, gray]           at (8.5, 4.85) {(2D, topología preservada)};
+
+% Celdas del mapa coloreadas por categoría emergente
+\foreach \row/\col/\fillcol in {
+    0/0/red!40,   0/1/red!30,   0/2/blue!20,  0/3/blue!40,
+    1/0/red!35,   1/1/red!20,   1/2/blue!30,  1/3/blue!35,
+    2/0/orange!20,2/1/orange!15,2/2/green!25, 2/3/green!40,
+    3/0/orange!30,3/1/orange!25,3/2/green!35, 3/3/green!45
+}{
+    \fill[\fillcol] (5.8+\col*0.95, 4.4-\row*0.95)
+        rectangle (5.8+\col*0.95+0.9, 4.4-\row*0.95-0.9);
+    \draw[gray!40] (5.8+\col*0.95, 4.4-\row*0.95)
+        rectangle (5.8+\col*0.95+0.9, 4.4-\row*0.95-0.9);
+}
+
+% Etiquetas de regiones
+\node[font=\footnotesize\bfseries, red!70]
+    at (6.75, 3.95) {animales};
+\node[font=\footnotesize\bfseries, blue!70]
+    at (8.15, 3.95) {vehículos};
+\node[font=\footnotesize\bfseries, orange!80]
+    at (6.75, 2.1) {mixto};
+\node[font=\footnotesize\bfseries, green!60!black]
+    at (8.15, 2.1) {frutas};
+
+% Nota de gradiente suave
+\draw[dashed, gray!50] (7.25, 4.4) -- (7.25, 0.55);
+\draw[dashed, gray!50] (5.8, 2.55) -- (9.6, 2.55);
+\node[font=\tiny, gray] at (8.5, 0.35)
+    {Regiones similares son vecinas en el mapa (topología preservada)};
+
+\end{tikzpicture}
+\caption{Resultado del entrenamiento de un SOM. Los datos de entrada de alta
+dimensión (izquierda) se proyectan en una grilla 2D (derecha) donde entradas
+similares quedan agrupadas en regiones contiguas. La topología del espacio
+original se preserva: las regiones de categorías cercanas semánticamente
+(como \textit{animales} y \textit{mixto}) quedan adyacentes en el mapa~\cite{kohonen1990som}.}
+\label{fig:som_resultado}
+\end{figure}

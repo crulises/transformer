@@ -1,0 +1,89 @@
+% ============================================================
+% fig_som_proceso.tex — Proceso de entrenamiento SOM (pasos)
+% Uso: \input{figures/fig_som_proceso}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    neuron/.style={circle, draw=blue!50, fill=blue!8, minimum size=0.55cm},
+    bmu/.style={circle, draw=red!70, fill=red!20, minimum size=0.55cm, very thick},
+    neighbor/.style={circle, draw=orange!70, fill=orange!10, minimum size=0.55cm, thick},
+    input/.style={circle, draw=green!60!black, fill=green!15, minimum size=0.6cm, font=\tiny},
+    arrow/.style={-{Stealth}, thick},
+    label/.style={font=\small\bfseries, gray}
+]
+
+% ─── Grilla 3×3 en t=0 (aleatoria) ──────────────────────────
+\node[label] at (1.0, 4.1) {$t = 0$ (inicial)};
+\foreach \row in {0,1,2}{
+    \foreach \col in {0,1,2}{
+        \node[neuron] at (\col*0.9, 3.2-\row*0.9) {};
+    }
+}
+\node[font=\tiny, gray] at (1.0, 0.8) {pesos aleatorios};
+
+% ─── Flecha paso 1 ──────────────────────────────────────────
+\draw[arrow, blue!60] (2.4, 2.2) -- (3.2, 2.2);
+\node[font=\tiny, align=center, blue!70] at (2.8, 2.55)
+    {1. presentar\\entrada $\bm{x}$};
+
+% ─── Grilla con BMU marcada ──────────────────────────────────
+\node[label] at (5.0, 4.1) {BMU encontrada};
+% Entrada
+\node[input] at (5.0, 4.55) {$\bm{x}$};
+\foreach \row in {0,1,2}{
+    \foreach \col in {0,1,2}{
+        \pgfmathparse{int(\row==1 && \col==1)}
+        \ifnum\pgfmathresult=1
+            \node[bmu]      at (3.6+\col*0.9, 3.2-\row*0.9) {};
+        \else
+            \pgfmathparse{int(abs(\row-1)<=1 && abs(\col-1)<=1)}
+            \ifnum\pgfmathresult=1
+                \node[neighbor] at (3.6+\col*0.9, 3.2-\row*0.9) {};
+            \else
+                \node[neuron]   at (3.6+\col*0.9, 3.2-\row*0.9) {};
+            \fi
+        \fi
+    }
+}
+\draw[red!60, dashed] (5.0, 4.4) -- (4.5, 2.3);
+\node[font=\tiny, gray] at (5.0, 0.8) {BMU=rojo, vecinos=naranja};
+
+% ─── Flecha paso 2 ──────────────────────────────────────────
+\draw[arrow, blue!60] (6.4, 2.2) -- (7.2, 2.2);
+\node[font=\tiny, align=center, blue!70] at (6.8, 2.55)
+    {2. actualizar\\BMU+vecinos};
+
+% ─── Grilla actualizada ─────────────────────────────────────
+\node[label] at (9.0, 4.1) {pesos actualizados};
+\foreach \row in {0,1,2}{
+    \foreach \col in {0,1,2}{
+        \pgfmathparse{int(\row==1 && \col==1)}
+        \ifnum\pgfmathresult=1
+            \node[bmu]      at (7.6+\col*0.9, 3.2-\row*0.9) {};
+        \else
+            \pgfmathparse{int(abs(\row-1)<=1 && abs(\col-1)<=1)}
+            \ifnum\pgfmathresult=1
+                \node[neighbor] at (7.6+\col*0.9, 3.2-\row*0.9) {};
+            \else
+                \node[neuron]   at (7.6+\col*0.9, 3.2-\row*0.9) {};
+            \fi
+        \fi
+    }
+}
+\node[font=\tiny, gray, align=center] at (9.0, 0.8) {BMU y vecinos se\\acercan a $\bm{x}$};
+
+% ─── Leyenda regla de actualización ─────────────────────────
+\node[draw=blue!20, fill=blue!5, rounded corners, font=\footnotesize,
+      inner sep=5pt, align=left] at (5.5, -0.5)
+      {$\bm{w}_i(t{+}1) = \bm{w}_i(t) + \alpha(t)\, h_{ci}(t)\,[\bm{x}(t) - \bm{w}_i(t)]$};
+
+\end{tikzpicture}
+\caption{Proceso de entrenamiento de un SOM en una iteración. (1) Se presenta
+una entrada $\bm{x}$ y se identifica la neurona ganadora o \textit{Best Matching
+Unit} (BMU, en rojo), la de menor distancia a $\bm{x}$. (2) La BMU y sus
+vecinas (naranja) actualizan sus pesos acercándose a $\bm{x}$ según la regla
+mostrada, donde $\alpha(t)$ es la tasa de aprendizaje y $h_{ci}(t)$ es la
+función de vecindad.}
+\label{fig:som_proceso}
+\end{figure}

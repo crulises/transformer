@@ -1,0 +1,54 @@
+% ============================================================
+% fig_perceptron.tex — Diagrama del perceptrón
+% Uso: \input{figures/fig_perceptron}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm,
+    input/.style={circle, draw=gray!60, fill=gray!15, minimum size=0.8cm, font=\small},
+    neuron/.style={circle, draw=blue!60, fill=blue!10, minimum size=1.0cm, font=\small\bfseries},
+    output/.style={circle, draw=green!60!black, fill=green!10, minimum size=0.8cm, font=\small},
+    arrow/.style={-{Stealth}, thick}
+]
+
+% Entradas
+\node[input] (x1) at (0, 2)   {$x_1$};
+\node[input] (x2) at (0, 0.7) {$x_2$};
+\node        (xd) at (0,-0.1) {$\vdots$};
+\node[input] (xn) at (0,-1)   {$x_n$};
+
+% Neurona
+\node[neuron] (n) at (3, 0.7) {$\Sigma$};
+
+% Salida
+\node[output] (y) at (5.5, 0.7) {$y$};
+
+% Bias
+\node[input] (b) at (1.5, -1.8) {$b$};
+
+% Función de activación (caja)
+\node[draw=orange!70, fill=orange!10, rounded corners, minimum width=1.1cm,
+      minimum height=0.7cm, font=\small] (phi) at (4.4, 0.7) {$\varphi$};
+
+% Flechas entradas → neurona
+\draw[arrow] (x1) -- node[above, font=\tiny] {$w_1$} (n);
+\draw[arrow] (x2) -- node[above, font=\tiny] {$w_2$} (n);
+\draw[arrow] (xn) -- node[below, font=\tiny] {$w_n$} (n);
+\draw[arrow] (b)  -- (n);
+
+% Neurona → activación → salida
+\draw[arrow] (n)   -- (phi);
+\draw[arrow] (phi) -- (y);
+
+% Etiquetas
+\node[font=\footnotesize, gray] at (0, -2.2) {Entradas};
+\node[font=\footnotesize, gray] at (3, -2.2) {Suma ponderada};
+\node[font=\footnotesize, gray] at (5.5, -2.2) {Salida};
+
+\end{tikzpicture}
+\caption{Estructura del perceptrón. Las entradas $x_i$ se combinan linealmente
+con pesos $w_i$ y un sesgo $b$; la suma se pasa por una función de activación
+$\varphi$ para producir la salida $y$.}
+\label{fig:perceptron}
+\end{figure}

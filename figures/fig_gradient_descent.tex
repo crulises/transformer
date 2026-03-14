@@ -1,0 +1,58 @@
+% ============================================================
+% fig_gradient_descent.tex — Descenso del gradiente
+% Uso: \input{figures/fig_gradient_descent}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.1]
+
+% Ejes
+\draw[-{Stealth}, thick] (-0.3, 0) -- (6.5, 0) node[right] {$w$};
+\draw[-{Stealth}, thick] (0, -0.3) -- (0, 4.2) node[above] {$\mathcal{L}(w)$};
+
+% Curva de pérdida (parábola suavizada)
+\draw[blue!70, very thick, domain=0.3:6.1, samples=80]
+    plot (\x, {0.35*(\x-3.2)^2 + 0.5});
+
+% Mínimo
+\fill[green!60!black] (3.2, 0.5) circle (3pt) node[below right, font=\small] {mínimo};
+
+% Puntos del descenso
+\coordinate (p1) at (1.0, 2.34);
+\coordinate (p2) at (1.7, 1.44);
+\coordinate (p3) at (2.3, 0.87);
+\coordinate (p4) at (2.75, 0.59);
+\coordinate (p5) at (3.05, 0.51);
+
+\fill[red!70]    (p1) circle (3pt);
+\fill[red!60]    (p2) circle (3pt);
+\fill[orange!80] (p3) circle (3pt);
+\fill[orange!60] (p4) circle (3pt);
+\fill[yellow!80!orange] (p5) circle (3pt);
+
+% Flechas de actualización
+\draw[-{Stealth}, red!60, thick]    (p1) -- (p2);
+\draw[-{Stealth}, red!40, thick]    (p2) -- (p3);
+\draw[-{Stealth}, orange!80, thick] (p3) -- (p4);
+\draw[-{Stealth}, orange!50, thick] (p4) -- (p5);
+
+% Etiqueta tasa de aprendizaje
+\draw[dashed, gray] (1.0, 0) -- (p1);
+\draw[dashed, gray] (1.7, 0) -- (p2);
+\node[font=\tiny, gray] at (1.35, -0.2) {$\eta \cdot \nabla\mathcal{L}$};
+\draw[{Stealth}-{Stealth}, gray, thin] (1.05, -0.15) -- (1.65, -0.15);
+
+% Fórmula
+\node[draw=blue!30, fill=blue!5, rounded corners, font=\small,
+      inner sep=6pt] at (5.0, 3.5)
+      {$w \leftarrow w - \eta \dfrac{\partial \mathcal{L}}{\partial w}$};
+
+\node[font=\footnotesize, gray] at (3.2, -0.5) {$w^*$};
+
+\end{tikzpicture}
+\caption{Descenso del gradiente. Partiendo de un valor inicial de $w$, cada
+iteración actualiza el parámetro en dirección opuesta al gradiente de la
+pérdida $\mathcal{L}$, con magnitud controlada por la tasa de aprendizaje
+$\eta$. El proceso converge progresivamente al mínimo $w^*$.}
+\label{fig:gradient_descent}
+\end{figure}

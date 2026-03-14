@@ -1,0 +1,60 @@
+\section{Introducción}
+\label{sec:introduccion}
+
+En el campo de la Inteligencia Artificial, las redes neuronales artificiales
+han sido históricamente una de las principales herramientas para el modelado
+de funciones complejas y el aprendizaje a partir de datos. En cursos
+introductorios de la disciplina, se estudian arquitecturas clásicas como el
+perceptrón, el perceptrón multicapa (MLP), las redes de Hopfield y los mapas
+autoorganizados (SOM), las cuales permiten comprender los fundamentos del
+aprendizaje supervisado, no supervisado y asociativo.
+
+Sin embargo, estas arquitecturas presentan limitaciones estructurales cuando
+se enfrentan a problemas que requieren el modelado de dependencias contextuales
+complejas, como es el caso del procesamiento del lenguaje natural (NLP, por sus
+siglas en inglés). El lenguaje humano es inherentemente secuencial, ambiguo y
+dependiente del contexto, características que dificultan su tratamiento mediante
+modelos diseñados para entradas de tamaño fijo o relaciones puramente locales.
+
+En este contexto, la arquitectura Transformer, introducida por
+\textcite{vaswani2017attention}, representa un cambio de paradigma en el diseño
+de redes neuronales para el procesamiento de secuencias, al basarse en el
+mecanismo de atención en lugar de recurrencia o convolución. Su impacto fue tal
+que dio origen a la familia de modelos de lenguaje de gran escala que hoy
+sustentan aplicaciones como traducción automática, generación de texto y
+asistentes conversacionales~\cite{rothman2022transformers}.
+
+Este trabajo tiene como objetivo analizar los principios teóricos que
+fundamentan la arquitectura Transformer, contrastándolos con los modelos
+clásicos estudiados en la cátedra, y desarrollar un prototipo mínimo funcional
+que permita evidenciar dichas diferencias de manera concreta. El prototipo
+consiste en un modelo de lenguaje autoregresivo a nivel carácter, construido
+desde cero en PyTorch, sin recurrir a implementaciones de alto nivel de la
+librería.
+
+\subsection*{Alcance y nivel de tratamiento}
+
+Las arquitecturas y conceptos presentados en este trabajo se describen con
+un nivel de detalle acorde al carácter introductorio de la cátedra. En
+particular, los modelos clásicos (perceptrón, MLP, Hopfield, SOM) se
+retoman como punto de contraste conceptual, sin pretender agotar su
+formalización matemática completa. Del mismo modo, la descripción del
+Transformer y su implementación apuntan a la comprensión de los principios
+fundamentales, y no a reproducir el estado del arte en escala o rendimiento.
+El objetivo es siempre la claridad conceptual por sobre la exhaustividad
+técnica.
+
+\subsection*{Organización del documento}
+
+El documento se organiza de la siguiente manera:
+la Sección~\ref{sec:redes_clasicas} presenta las arquitecturas clásicas y sus
+limitaciones estructurales;
+la Sección~\ref{sec:problema_nlp} caracteriza el problema del procesamiento del
+lenguaje natural;
+la Sección~\ref{sec:mecanismo_atencion} introduce el mecanismo de atención como
+respuesta a dichas limitaciones;
+la Sección~\ref{sec:arquitectura_transformer} describe en detalle la arquitectura
+Transformer;
+la Sección~\ref{sec:transformer_minimo} define formalmente el modelo implementado;
+la Sección~\ref{sec:conclusiones} presenta las conclusiones del trabajo; y el
+Anexo~\ref{sec:implementacion} incluye la implementación comentada.

@@ -1,0 +1,194 @@
+\section{El problema del procesamiento del lenguaje natural}
+\label{sec:problema_nlp}
+
+El procesamiento del lenguaje natural (NLP, por sus siglas en inglés) tiene
+como objetivo dotar a los sistemas computacionales de la capacidad de
+comprender y generar lenguaje humano. A diferencia de otros dominios donde
+las entradas son vectores numéricos bien definidos, el lenguaje presenta
+propiedades estructurales que lo hacen particularmente difícil de modelar
+con las arquitecturas revisadas en la sección anterior.
+
+Esta sección caracteriza las cuatro propiedades del lenguaje natural que
+resultan más problemáticas para los modelos clásicos y que motivan
+directamente el diseño del mecanismo de atención.
+
+%------------------------------------------------------------
+\subsection{El lenguaje como secuencia de símbolos discretos}
+\label{subsec:lenguaje_secuencia}
+
+El lenguaje natural se expresa como secuencias de unidades discretas:
+palabras, subpalabras o caracteres, denominados genéricamente
+\textit{tokens}. A diferencia de una señal continua, cada token pertenece
+a un vocabulario finito $\mathcal{V}$ y su representación numérica inmediata
+(\textit{one-hot}) no captura ninguna relación con los demás tokens.
+
+Más aún, el lenguaje es fundamentalmente \textit{variable en longitud}: una
+oración puede tener 3 tokens o 300. Esto contrasta con los MLPs, que
+requieren entradas de dimensión fija, y con las RNNs, que procesan la
+secuencia de forma estrictamente secuencial. Cualquier arquitectura que
+pretenda modelar lenguaje debe ser capaz de operar sobre secuencias de
+longitud arbitraria sin perder información posicional ni contextual.
+
+%------------------------------------------------------------
+\subsection{Ambigüedad semántica}
+\label{subsec:ambiguedad}
+
+Una de las propiedades más características del lenguaje natural es su
+ambigüedad: una misma forma superficial puede tener significados
+completamente distintos dependiendo del contexto en que aparece. Esta
+ambigüedad ocurre a múltiples niveles:
+
+\begin{itemize}
+    \item \textbf{Léxica:} una misma palabra tiene distintos significados
+    (\textit{polisemia}). Ejemplo: \textit{banco} puede ser una institución
+    financiera o un asiento exterior.
+
+    \item \textbf{Sintáctica:} una misma oración admite distintas
+    estructuras gramaticales. Ejemplo: \textit{``Vi al espía con el
+    telescopio''} puede significar que yo usé el telescopio, o que el
+    espía lo tenía.
+
+    \item \textbf{Pragmática:} el significado depende del contexto
+    situacional más allá del texto mismo.
+\end{itemize}
+
+\input{figures/fig_ambiguedad}
+
+La consecuencia directa para el modelado es que no existe una representación
+fija correcta para un token: su significado es una función de su contexto.
+Un modelo que asigne a cada token un vector de representación estático
+—independiente del resto de la secuencia— no puede resolver esta ambigüedad.
+Esto descarta, en principio, cualquier arquitectura sin mecanismo de
+contextualización dinámica.
+
+%------------------------------------------------------------
+\subsection{Dependencias de largo alcance}
+\label{subsec:dependencias_largas}
+
+En el lenguaje natural, dos elementos de una oración pueden estar
+relacionados gramaticalmente o semánticamente aunque estén separados por
+muchos otros tokens. Estas relaciones se denominan \textit{dependencias de
+largo alcance} y son ubicuas en el lenguaje real~\cite{bengio2003neural}.
+
+Un ejemplo paradigmático es la concordancia sujeto-verbo en oraciones con
+cláusulas subordinadas intercaladas:
+
+\begin{quote}
+\textit{``El científico que ganó el premio Nobel de física presentó su investigación.''}
+\end{quote}
+
+El verbo \textit{presentó} debe concordar en número y persona con el sujeto
+\textit{científico}, aunque ambos estén separados por la cláusula relativa
+\textit{``que ganó el premio Nobel de física''} (6 tokens). Un modelo con
+ventana de contexto fija menor que esa distancia nunca puede aprender esta
+relación correctamente.
+
+\input{figures/fig_dependencias}
+
+Formalmente, si definimos la \textit{longitud de dependencia} entre dos
+tokens $i$ y $j$ como $|i - j|$, los modelos de ventana fija de ancho $k$
+son ciegos a toda dependencia con $|i - j| > k$. En textos reales, las
+dependencias relevantes pueden extenderse a decenas de tokens~\cite{vaswani2017attention}.
+
+%------------------------------------------------------------
+\subsection{Orden y estructura sintáctica}
+\label{subsec:orden}
+
+El orden de los tokens en una secuencia es portador de significado: no es
+simplemente un atributo accidental sino una dimensión informativa
+fundamental. Considérense los pares:
+
+\begin{center}
+\begin{tabular}{ll}
+\textit{``El perro muerde al hombre''} & $\neq$ \textit{``El hombre muerde al perro''} \\[2pt]
+\textit{``No es verdad que miente''}   & $\neq$ \textit{``Es verdad que no miente''}   \\
+\end{tabular}
+\end{center}
+
+Ambos pares contienen exactamente los mismos tokens; el significado cambia
+radicalmente con el orden. Esto implica que cualquier modelo que procese los
+tokens como un conjunto desordenado —es decir, que sea \textit{invariante a
+permutaciones}— es estructuralmente incapaz de modelar lenguaje de forma
+correcta~\cite{goodfellow2016deeplearning}.
+
+Los MLPs son invariantes a permutaciones salvo que la posición esté
+codificada explícitamente en la entrada. Las RNNs incorporan el orden
+implícitamente a través del estado oculto secuencial, pero al costo de
+procesar los tokens uno a uno. Los Transformers deben resolver este problema
+de una tercera forma: codificando el orden \textit{explícitamente} sin
+sacrificar el paralelismo. Esta solución —la codificación posicional— se
+describe en la Sección~\ref{sec:arquitectura_transformer}.
+
+%------------------------------------------------------------
+\subsection{Correferencialidad}
+\label{subsec:correferencia}
+
+La \textit{correferencialidad} ocurre cuando distintas expresiones en un
+texto refieren a la misma entidad. El caso más común son los pronombres:
+
+\begin{quote}
+\textit{``La investigadora publicó sus resultados. \textbf{Ella} había
+trabajado durante diez años en el problema.''}
+\end{quote}
+
+Para interpretar correctamente \textit{ella}, el modelo debe establecer que
+este pronombre corefiere con \textit{investigadora}, mencionada en la oración
+anterior. Esta relación puede extenderse a través de múltiples oraciones y
+requiere rastrear entidades a lo largo de un contexto potencialmente largo.
+
+La correferencia es conceptualmente análoga al problema de Hopfield: así
+como en una red de Hopfield el estado de cada unidad está determinado por el
+estado global del sistema, resolver la correferencia requiere que cada token
+sea interpretado en función de todos los demás. La diferencia clave es la
+escala y la dirección: mientras Hopfield opera sobre patrones binarios fijos,
+el lenguaje requiere relaciones dinámicas y asimétricas entre tokens.
+
+%------------------------------------------------------------
+\subsection{Análisis integrado: por qué el contexto es indispensable}
+\label{subsec:contexto_indispensable}
+
+Las cuatro propiedades anteriores convergen en una conclusión unificada:
+\textbf{el significado de un token no puede determinarse en aislamiento}. Es
+siempre una función del contexto en que aparece.
+
+La siguiente figura analiza paso a paso cómo el contexto es imprescindible
+para resolver incluso una ambigüedad simple:
+
+\input{figures/fig_ejemplo_contexto}
+
+Este ejemplo ilustra un principio general: un modelo que procese cada token
+de forma independiente, o que solo tenga acceso a una ventana local, no puede
+garantizar la interpretación correcta. Se requiere un mecanismo que permita
+que \textit{cualquier} token acceda a la información de \textit{cualquier
+otro} token de la secuencia, sin restricción de distancia.
+
+%------------------------------------------------------------
+\subsection{Requerimientos para un modelo de lenguaje adecuado}
+\label{subsec:requerimientos}
+
+Las propiedades del lenguaje descritas en esta sección imponen requerimientos
+concretos a cualquier arquitectura que pretenda modelarlo correctamente.
+La Tabla~\ref{tab:requerimientos_nlp} los resume y los contrasta con las
+capacidades de los modelos clásicos ya analizados.
+
+\begin{table}[H]
+\centering
+\caption{Requerimientos del modelado del lenguaje natural y cobertura por
+arquitectura.}
+\label{tab:requerimientos_nlp}
+\begin{tabularx}{\textwidth}{lXcc}
+\toprule
+\textbf{Requerimiento} & \textbf{Motivación} & \textbf{Modelos clásicos} & \textbf{Transformer} \\
+\midrule
+Longitud variable        & Secuencias arbitrarias        & Limitado / No & Sí \\
+Representación contextual & Ambigüedad semántica          & No            & Sí \\
+Dependencias globales    & Largo alcance, correferencia  & No            & Sí \\
+Sensibilidad al orden    & Estructura sintáctica         & Parcial       & Sí \\
+Paralelización           & Eficiencia en entrenamiento   & No (RNN)      & Sí \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Ninguna de las arquitecturas clásicas cubre simultáneamente todos estos
+requerimientos. La siguiente sección introduce el mecanismo que permite
+satisfacerlos: la \textit{atención}.
