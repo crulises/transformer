@@ -1,0 +1,134 @@
+% ============================================================
+% fig_transformer_completo.tex — Arquitectura Transformer completa
+% Uso: \input{figures/fig_transformer_completo}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    blk/.style={draw, rounded corners, minimum width=3.0cm,
+                minimum height=0.62cm, font=\footnotesize, align=center},
+    enc/.style={blk, fill=blue!10, draw=blue!40},
+    dec/.style={blk, fill=green!10, draw=green!50!black},
+    norm/.style={blk, fill=orange!10, draw=orange!50,
+                 minimum height=0.5cm},
+    emb/.style={blk, fill=purple!10, draw=purple!40},
+    outblk/.style={blk, fill=red!8, draw=red!40},
+    add/.style={draw, circle, fill=yellow!20, draw=yellow!60!black,
+                minimum size=0.42cm, font=\scriptsize\bfseries},
+    arrow/.style={-{Stealth}, thick},
+    skip/.style={-{Stealth}, thick, gray!50, dashed},
+    lbl/.style={font=\tiny, gray}
+]
+
+%═══════════════════════════════════════════════════════════
+% ENCODER (izquierda)
+%═══════════════════════════════════════════════════════════
+\node[font=\small\bfseries, blue!60] at (-3.2, 10.8) {ENCODER};
+
+% Entrada
+\node[lbl] (src) at (-3.2, -0.4) {secuencia de entrada};
+\node[emb] (src_emb) at (-3.2, 0.55) {Input Embedding};
+\node[emb] (src_pe)  at (-3.2, 1.45) {Positional Encoding};
+
+% Bloque encoder (representado como caja grande)
+\draw[blue!30, rounded corners, thick, fill=blue!3]
+    (-4.9, 2.1) rectangle (-1.5, 7.9);
+\node[lbl] at (-4.55, 7.65) {$\times N$};
+
+\node[enc]  (mha_e)  at (-3.2, 2.75) {Multi-Head\\Self-Attention};
+\node[add]  (add1e)  at (-3.2, 3.75) {$+$};
+\node[norm] (ln1e)   at (-3.2, 4.4)  {Add \& Norm};
+\node[enc]  (ffn_e)  at (-3.2, 5.3)  {Feed-Forward};
+\node[add]  (add2e)  at (-3.2, 6.3)  {$+$};
+\node[norm] (ln2e)   at (-3.2, 6.95) {Add \& Norm};
+
+% Salida encoder
+\node[lbl] (enc_out) at (-3.2, 8.3) {$K, V$ al decoder};
+
+% Flechas encoder
+\draw[arrow] (src)     -- (src_emb);
+\draw[arrow] (src_emb) -- (src_pe);
+\draw[arrow] (src_pe)  -- (mha_e);
+\draw[arrow] (mha_e)   -- (add1e);
+\draw[arrow] (add1e)   -- (ln1e);
+\draw[arrow] (ln1e)    -- (ffn_e);
+\draw[arrow] (ffn_e)   -- (add2e);
+\draw[arrow] (add2e)   -- (ln2e);
+\draw[arrow] (ln2e)    -- (enc_out);
+
+% Residuales encoder
+\draw[skip] (src_pe.west) -- ++(-0.7,0) -- ++(0,3.75) -- (add1e.west);
+\draw[skip] (ln1e.west)   -- ++(-0.5,0) -- ++(0,2.0)  -- (add2e.west);
+
+%═══════════════════════════════════════════════════════════
+% DECODER (derecha)
+%═══════════════════════════════════════════════════════════
+\node[font=\small\bfseries, green!60!black] at (3.2, 10.8) {DECODER};
+
+% Entrada
+\node[lbl] (tgt) at (3.2, -0.4) {secuencia de salida (desplazada)};
+\node[emb] (tgt_emb) at (3.2, 0.55) {Output Embedding};
+\node[emb] (tgt_pe)  at (3.2, 1.45) {Positional Encoding};
+
+% Bloque decoder
+\draw[green!30, rounded corners, thick, fill=green!3]
+    (1.5, 2.1) rectangle (4.9, 9.1);
+\node[lbl] at (4.55, 8.85) {$\times N$};
+
+\node[dec]  (mha_d1) at (3.2, 2.75) {Masked Multi-Head\\Self-Attention};
+\node[add]  (add1d)  at (3.2, 3.75) {$+$};
+\node[norm] (ln1d)   at (3.2, 4.4)  {Add \& Norm};
+\node[dec]  (mha_d2) at (3.2, 5.3)  {Multi-Head\\Cross-Attention};
+\node[add]  (add2d)  at (3.2, 6.3)  {$+$};
+\node[norm] (ln2d)   at (3.2, 6.95) {Add \& Norm};
+\node[dec]  (ffn_d)  at (3.2, 7.85) {Feed-Forward};
+\node[add]  (add3d)  at (3.2, 8.75) {$+$};
+% (ln3 dentro del bloque, salida)
+
+% Flechas decoder
+\draw[arrow] (tgt)     -- (tgt_emb);
+\draw[arrow] (tgt_emb) -- (tgt_pe);
+\draw[arrow] (tgt_pe)  -- (mha_d1);
+\draw[arrow] (mha_d1)  -- (add1d);
+\draw[arrow] (add1d)   -- (ln1d);
+\draw[arrow] (ln1d)    -- (mha_d2);
+\draw[arrow] (mha_d2)  -- (add2d);
+\draw[arrow] (add2d)   -- (ln2d);
+\draw[arrow] (ln2d)    -- (ffn_d);
+\draw[arrow] (ffn_d)   -- (add3d);
+
+% Residuales decoder
+\draw[skip] (tgt_pe.east) -- ++(0.7,0) -- ++(0,3.75) -- (add1d.east);
+\draw[skip] (ln1d.east)   -- ++(0.5,0) -- ++(0,2.0)  -- (add2d.east);
+\draw[skip] (ln2d.east)   -- ++(0.5,0) -- ++(0,2.0)  -- (add3d.east);
+
+% ── Conexión encoder → decoder (cross-attention) ─────────────
+\draw[arrow, red!60, very thick]
+    (enc_out.east) -- ++(0.5,0) -- ++(0,-3.0) -- (mha_d2.west);
+\node[font=\tiny, red!60, align=center] at (0, 6.8)
+    {$K$, $V$ del\\encoder};
+
+% ── Salida final ──────────────────────────────────────────────
+\node[outblk]  (linear)  at (3.2, 9.8)  {Linear};
+\node[outblk]  (softmax) at (3.2, 10.5) {Softmax};
+\node[lbl]           at (3.2, 11.1)  {probabilidades de salida};
+
+\draw[arrow] (add3d)  -- (linear);
+\draw[arrow] (linear)  -- (softmax);
+
+% ── Nota máscara ─────────────────────────────────────────────
+\node[draw=gray!30, fill=gray!5, rounded corners, font=\tiny,
+      inner sep=4pt, align=left] at (6.8, 2.75)
+    {\textbf{Masked:} m\'ascara causal\\impide ver tokens futuros.\\Garantiza generaci\'on\\autoregresiva.};
+\draw[-{Stealth}, gray!40, thin] (4.9, 2.75) -- (5.5, 2.75);
+
+\end{tikzpicture}
+\caption{Arquitectura completa del Transformer original~\cite{vaswani2017attention}.
+El encoder (izquierda) procesa la secuencia de entrada en paralelo y produce
+representaciones contextualizadas. El decoder (derecha) genera la secuencia
+de salida token a token, utilizando atenci\'on enmascarada sobre su propia
+salida parcial y atenci\'on cruzada (\textit{cross-attention}) sobre las
+representaciones del encoder. Las flechas rojas indican el flujo de $K$ y $V$
+del encoder al decoder.}
+\label{fig:transformer_completo}
+\end{figure}

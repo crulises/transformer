@@ -1,0 +1,86 @@
+% ============================================================
+% fig_variantes_transformer.tex — Variantes encoder-only vs enc-dec
+% Uso: \input{figures/fig_variantes_transformer}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    hdr/.style={font=\small\bfseries, align=center},
+    cell/.style={font=\footnotesize, align=center},
+    enconly/.style={draw=blue!40, fill=blue!8, rounded corners,
+                    minimum width=2.2cm, minimum height=0.8cm,
+                    font=\footnotesize\bfseries, align=center},
+    encdec/.style={draw=green!50!black, fill=green!8, rounded corners,
+                   minimum width=2.2cm, minimum height=0.8cm,
+                   font=\footnotesize\bfseries, align=center}
+]
+
+% ── Mini diagramas ───────────────────────────────────────────
+
+% Encoder-only
+\node[enconly] at (1.5, 6.5) {Encoder\\$\times N$};
+\node[font=\tiny, gray] at (1.5, 5.9) {entrada};
+\node[font=\tiny, gray] at (1.5, 7.1) {repr. contextual};
+\draw[-{Stealth}, thick, blue!50] (1.5, 6.1) -- (1.5, 6.15);
+\draw[-{Stealth}, thick, blue!50] (1.5, 6.85) -- (1.5, 6.9);
+\node[font=\small\bfseries, blue!60] at (1.5, 7.5) {Encoder-only};
+\node[font=\tiny, gray] at (1.5, 7.9) {(ej: BERT)};
+
+% Encoder-Decoder
+\node[enconly]  at (6.5, 6.5) {Encoder\\$\times N$};
+\node[encdec]   at (8.8, 6.5) {Decoder\\$\times N$};
+\draw[-{Stealth}, thick, red!50] (7.7, 6.5) -- (8.05, 6.5);
+\node[font=\tiny, red!60] at (7.87, 6.75) {$K,V$};
+\node[font=\tiny, gray]   at (6.5, 5.9) {entrada};
+\node[font=\tiny, gray]   at (8.8, 7.1) {salida};
+\draw[-{Stealth}, thick, blue!50]  (6.5, 6.1) -- (6.5, 6.15);
+\draw[-{Stealth}, thick, green!50!black] (8.8, 6.85) -- (8.8, 6.9);
+\node[font=\small\bfseries, green!60!black] at (7.65, 7.5) {Encoder-Decoder};
+\node[font=\tiny, gray] at (7.65, 7.9) {(ej: T5, BART)};
+
+% Decoder-only
+\node[encdec] at (12.5, 6.5) {Decoder\\(causal) $\times N$};
+\node[font=\tiny, gray] at (12.5, 5.9) {contexto previo};
+\node[font=\tiny, gray] at (12.5, 7.1) {siguiente token};
+\draw[-{Stealth}, thick, green!50!black] (12.5, 6.1) -- (12.5, 6.15);
+\draw[-{Stealth}, thick, green!50!black] (12.5, 6.85) -- (12.5, 6.9);
+\node[font=\small\bfseries, green!60!black] at (12.5, 7.5) {Decoder-only};
+\node[font=\tiny, gray] at (12.5, 7.9) {(ej: GPT, LLaMA)};
+
+% ── Tabla comparativa ─────────────────────────────────────────
+\node[hdr] at (0,    5.0) {Caracter\'istica};
+\node[hdr, blue!60] at (3.5,  5.0) {Encoder-only};
+\node[hdr, green!60!black] at (7.5,  5.0) {Encoder-Decoder};
+\node[hdr, green!60!black] at (11.5, 5.0) {Decoder-only};
+
+\draw[gray!40, thick] (-0.5, 4.7) -- (13.5, 4.7);
+
+% Filas
+\foreach \y/\lbl/\a/\b/\c in {
+    4.1/{Direcci\'on atenci\'on}/{bidireccional}/{bidireccional (enc)}/{unidireccional},
+    3.4/{Tarea principal}/{clasificaci\'on, NER}/{traducci\'on, res\'umenes}/{generaci\'on de texto},
+    2.7/{Ve tokens futuros}/{S\'i}/{S\'i (encoder)}/{No (m\'ascara causal)},
+    2.0/{Tama\~no relativo}/{mediano}/{grande}/{grande}
+}{
+    \node[cell, align=left] at (0, \y) {\lbl};
+    \node[cell] at (3.5,  \y) {\a};
+    \node[cell] at (7.5,  \y) {\b};
+    \node[cell] at (11.5, \y) {\c};
+    \draw[gray!20] (-0.5, \y-0.35) -- (13.5, \y-0.35);
+}
+
+\draw[gray!40] (-0.5, 5.3) -- (-0.5, 1.65);
+\draw[gray!40] (2.0,  5.3) -- (2.0,  1.65);
+\draw[gray!40] (5.5,  5.3) -- (5.5,  1.65);
+\draw[gray!40] (9.5,  5.3) -- (9.5,  1.65);
+\draw[gray!40] (13.5, 5.3) -- (13.5, 1.65);
+
+\end{tikzpicture}
+\caption{Las tres variantes principales de la arquitectura Transformer.
+\textbf{Encoder-only} (BERT): procesa la entrada completa en ambas
+direcciones; ideal para tareas de comprensi\'on. \textbf{Encoder-decoder}
+(T5, BART): mapea una secuencia a otra; ideal para traducci\'on y res\'umenes.
+\textbf{Decoder-only} (GPT, LLaMA): genera texto token a token con m\'ascara
+causal; es la base de los modelos de lenguaje actuales.}
+\label{fig:variantes_transformer}
+\end{figure}

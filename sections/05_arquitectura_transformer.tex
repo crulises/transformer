@@ -1,0 +1,211 @@
+\section{La arquitectura Transformer}
+\label{sec:arquitectura_transformer}
+
+Las secciones anteriores construyeron los conceptos fundamentales: las
+limitaciones de los modelos clásicos, el problema del lenguaje, y el
+mecanismo de atención como solución. Esta sección ensambla esos conceptos
+en la arquitectura completa del Transformer, describiendo cada bloque en
+el orden en que los datos los atraviesan.
+
+%------------------------------------------------------------
+\subsection{Visión general del pipeline}
+\label{subsec:pipeline}
+
+Antes de entrar en los detalles de cada componente, conviene tener una
+imagen clara del flujo completo de información. Dada una secuencia de
+tokens de entrada, el Transformer realiza los siguientes pasos en orden:
+
+\begin{enumerate}
+    \item Cada token se convierte en un vector denso mediante una capa de
+    \textbf{embeddings}.
+    \item Se suma un vector de \textbf{codificación posicional} para
+    inyectar información de orden.
+    \item La secuencia pasa por $N$ \textbf{bloques encoder} apilados,
+    cada uno con atención multi-cabeza y una red feed-forward.
+    \item (En modelos seq2seq) Una secuencia de salida parcial se procesa
+    en paralelo por $N$ \textbf{bloques decoder}, que combinan
+    auto-atención enmascarada con atención cruzada sobre el encoder.
+    \item Una proyección lineal y un softmax producen una distribución
+    de probabilidad sobre el vocabulario para el siguiente token.
+\end{enumerate}
+
+%------------------------------------------------------------
+\subsection{Codificación posicional}
+\label{subsec:positional_encoding}
+
+El mecanismo de atención, tal como se describió en la
+Sección~\ref{sec:mecanismo_atencion}, es invariante a permutaciones: si se
+reordena la secuencia, los pesos de atención cambian pero el modelo no
+tiene forma de saber que el orden cambió, porque trata todos los tokens
+de forma simétrica. Esto contradice una de las propiedades más importantes
+del lenguaje: el orden importa.
+
+La solución propuesta por Vaswani et al.~\cite{vaswani2017attention} es
+sumar a cada embedding un vector de \textit{codificación posicional} $PE_t$
+que depende únicamente de la posición $t$ del token en la secuencia:
+
+\begin{equation}
+    \bm{x}'_t = \bm{e}_t + PE_t
+\end{equation}
+
+La codificación utiliza funciones sinusoidales de distintas frecuencias
+para cada dimensión del vector:
+
+\begin{align}
+    PE_{(t,\, 2i)}   &= \sin\!\left(\frac{t}{10000^{2i/d_{\text{model}}}}\right) \\[4pt]
+    PE_{(t,\, 2i+1)} &= \cos\!\left(\frac{t}{10000^{2i/d_{\text{model}}}}\right)
+\end{align}
+
+\noindent donde $t$ es la posición del token y $i$ es el índice de la
+dimensión. Las dimensiones bajas oscilan con frecuencia alta (capturan
+relaciones locales) y las altas con frecuencia baja (capturan relaciones
+globales), de forma análoga a cómo un sistema numérico posicional codifica
+valores de distinta magnitud en cada dígito.
+
+Esta codificación tiene tres propiedades convenientes: es determinista
+(no requiere aprendizaje adicional), generaliza a secuencias más largas
+que las vistas en entrenamiento, y permite al modelo inferir distancias
+relativas entre posiciones a través de diferencias entre vectores.
+
+\input{figures/fig_positional_encoding}
+
+%------------------------------------------------------------
+\subsection{El bloque encoder}
+\label{subsec:bloque_encoder}
+
+El bloque encoder es la unidad fundamental de procesamiento. Recibe una
+secuencia de vectores y devuelve una secuencia del mismo tamaño, donde
+cada vector es una representación contextualizada de su token
+correspondiente. Está compuesto por dos sub-capas:
+
+\begin{enumerate}
+    \item \textbf{Multi-Head Self-Attention:} cada token consulta a todos
+    los demás para construir su representación contextualizada, como se
+    describió en la Sección~\ref{sec:mecanismo_atencion}.
+
+    \item \textbf{Feed-Forward Network (FFN):} una red de dos capas
+    lineales con activación no lineal, aplicada de forma idéntica e
+    independiente a cada posición:
+    \begin{equation}
+        \text{FFN}(\bm{x}) = \max(0,\, \bm{x} W_1 + \bm{b}_1)\, W_2 + \bm{b}_2
+    \end{equation}
+    La FFN actúa como una memoria de patrones por posición: mientras que
+    la atención mezcla información entre tokens, la FFN transforma cada
+    representación de forma local.
+\end{enumerate}
+
+Ambas sub-capas están envueltas en dos mecanismos de estabilización:
+
+\begin{itemize}
+    \item \textbf{Conexión residual (\textit{skip connection}):} la entrada
+    de cada sub-capa se suma a su salida antes de la normalización:
+    $\text{salida} = \text{sub-capa}(\bm{x}) + \bm{x}$. Esto permite que
+    los gradientes fluyan directamente hacia las capas anteriores durante
+    el entrenamiento, resolviendo el problema del gradiente desvanecido
+    que afectaba a las RNNs.
+
+    \item \textbf{Layer Normalization:} normaliza las activaciones de cada
+    vector de forma independiente, estabilizando el entrenamiento y
+    acelerando la convergencia~\cite{goodfellow2016deeplearning}.
+\end{itemize}
+
+\input{figures/fig_encoder_block}
+
+El encoder completo apila $N$ de estos bloques. Cada bloque puede
+especializarse en distintos tipos de relaciones: los primeros bloques
+tienden a capturar patrones locales y sintácticos, mientras que los
+bloques más profundos capturan relaciones semánticas de mayor
+abstracción~\cite{vaswani2017attention}.
+
+%------------------------------------------------------------
+\subsection{El bloque decoder}
+\label{subsec:bloque_decoder}
+
+El decoder extiende el encoder con un mecanismo adicional para incorporar
+información de la secuencia de entrada. Se utiliza en tareas donde la
+salida es una secuencia distinta de la entrada, como la traducción
+automática o la generación de resúmenes. Consta de tres sub-capas:
+
+\begin{enumerate}
+    \item \textbf{Masked Multi-Head Self-Attention:} idéntica a la del
+    encoder, pero con una máscara causal que impide que el token en
+    posición $t$ acceda a tokens en posiciones $t+1, t+2, \ldots$
+    Esto garantiza la propiedad autoregresiva: el modelo genera cada
+    token condicionado únicamente en los anteriores.
+
+    \item \textbf{Multi-Head Cross-Attention:} en esta sub-capa, las
+    \textit{queries} provienen del decoder (la secuencia generada hasta
+    el momento) mientras que las \textit{keys} y \textit{values} provienen
+    de la salida del encoder (la representación de la entrada). Esto
+    permite al decoder ``consultar'' la secuencia de entrada para decidir
+    qué información es relevante en cada paso de generación.
+
+    \item \textbf{Feed-Forward Network:} idéntica a la del encoder.
+\end{enumerate}
+
+Las tres sub-capas también están envueltas en conexiones residuales y
+Layer Normalization.
+
+%------------------------------------------------------------
+\subsection{Arquitectura completa}
+\label{subsec:arquitectura_completa}
+
+La Figura~\ref{fig:transformer_completo} muestra la arquitectura completa
+del Transformer original, con encoder y decoder.
+
+\input{figures/fig_transformer_completo}
+
+El flujo de información puede resumirse así: la secuencia de entrada pasa
+por el encoder y produce un conjunto de representaciones ricas en contexto.
+El decoder recibe estas representaciones a través del cross-attention y,
+combinándolas con su propio estado interno, genera la secuencia de salida
+token a token. En cada paso, el decoder produce una distribución de
+probabilidad sobre el vocabulario y selecciona el token más probable (o
+muestrea de la distribución), que luego se alimenta como entrada al
+siguiente paso.
+
+%------------------------------------------------------------
+\subsection{Variantes principales}
+\label{subsec:variantes}
+
+La arquitectura original de Vaswani et al.\ incluye encoder y decoder.
+Sin embargo, muchas aplicaciones prácticas utilizan únicamente uno de
+los dos componentes, dependiendo de la tarea:
+
+\input{figures/fig_variantes_transformer}
+
+Las tres variantes comparten los mismos bloques fundamentales —embeddings,
+codificación posicional, atención multi-cabeza, FFN, conexiones residuales
+y Layer Norm— pero difieren en cómo los ensamblan y en qué dirección
+procesan la información. Esta modularidad es una de las razones del éxito
+del Transformer como arquitectura universal.
+
+%------------------------------------------------------------
+\subsection{Hiperparámetros principales}
+\label{subsec:hiperparametros}
+
+El comportamiento del Transformer está controlado por un conjunto de
+hiperparámetros que determinan su capacidad y costo computacional. La
+Tabla~\ref{tab:hiperparametros} resume los más importantes.
+
+\begin{table}[H]
+\centering
+\caption{Hiperparámetros principales del Transformer y su efecto.}
+\label{tab:hiperparametros}
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Parámetro} & \textbf{Notación} & \textbf{Efecto} \\
+\midrule
+Dimensión del modelo   & $d_{\text{model}}$ & Tamaño de todos los vectores internos. Afecta capacidad y memoria. \\
+Número de cabezas      & $h$               & Cuántos tipos de relaciones puede capturar simultáneamente. \\
+Número de bloques      & $N$               & Profundidad del modelo. Más bloques = más abstracción. \\
+Dimensión FFN          & $d_{\text{ff}}$   & Generalmente $4 \times d_{\text{model}}$. Controla la ``memoria'' por posición. \\
+Longitud máx.\ de secuencia & $n_{\text{max}}$ & Límite de contexto. El costo de atención escala como $O(n^2)$. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Para el prototipo mínimo implementado en este trabajo (descrito en la
+Sección~\ref{sec:transformer_minimo}), se utilizan valores reducidos de
+estos hiperparámetros que permiten el entrenamiento en hardware doméstico
+sin sacrificar la comprensión de los mecanismos.
