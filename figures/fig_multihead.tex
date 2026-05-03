@@ -1,0 +1,87 @@
+% ============================================================
+% fig_multihead.tex — Multi-Head Attention
+% Uso: \input{figures/fig_multihead}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    head/.style={draw, rounded corners, minimum width=1.5cm,
+                 minimum height=0.7cm, font=\footnotesize\bfseries,
+                 align=center},
+    h1/.style={head, fill=blue!12,   draw=blue!50},
+    h2/.style={head, fill=red!10,    draw=red!45},
+    h3/.style={head, fill=green!10,  draw=green!50!black},
+    h4/.style={head, fill=orange!10, draw=orange!50},
+    box/.style={draw=gray!50, fill=gray!6, rounded corners,
+                minimum width=5.5cm, minimum height=0.7cm,
+                font=\small, align=center}
+]
+
+% ── Entrada ──────────────────────────────────────────────────
+\node[box] (inp) at (3.5, 6.5)
+    {Entrada $X \in \mathbb{R}^{n \times d_{\text{model}}}$};
+
+% ── 4 cabezas ────────────────────────────────────────────────
+\node[h1] (h1) at (0.7,  5.0) {Head 1\\$W_Q^1,W_K^1,W_V^1$};
+\node[h2] (h2) at (2.5,  5.0) {Head 2\\$W_Q^2,W_K^2,W_V^2$};
+\node[h3] (h3) at (4.3,  5.0) {Head 3\\$W_Q^3,W_K^3,W_V^3$};
+\node[h4] (h4) at (6.1,  5.0) {Head 4\\$W_Q^4,W_K^4,W_V^4$};
+
+\draw[-{Stealth}, thick, blue!50]        (inp.south) -| (h1.north);
+\draw[-{Stealth}, thick, red!45]         (inp.south) -| (h2.north);
+\draw[-{Stealth}, thick, green!50!black] (inp.south) -| (h3.north);
+\draw[-{Stealth}, thick, orange!50]      (inp.south) -| (h4.north);
+
+\node[font=\footnotesize, gray] at (3.5, 5.85)
+    {proyecciones independientes ($d_k = d_{\text{model}}/h$)};
+
+% ── Salidas ──────────────────────────────────────────────────
+\node[h1, minimum height=0.55cm] (z1) at (0.7,  3.7) {$Z_1$};
+\node[h2, minimum height=0.55cm] (z2) at (2.5,  3.7) {$Z_2$};
+\node[h3, minimum height=0.55cm] (z3) at (4.3,  3.7) {$Z_3$};
+\node[h4, minimum height=0.55cm] (z4) at (6.1,  3.7) {$Z_4$};
+
+\draw[-{Stealth}, thick] (h1)--(z1);
+\draw[-{Stealth}, thick] (h2)--(z2);
+\draw[-{Stealth}, thick] (h3)--(z3);
+\draw[-{Stealth}, thick] (h4)--(z4);
+
+% ── Concatenación ────────────────────────────────────────────
+\node[box, fill=yellow!8, draw=yellow!60!black] (concat) at (3.5, 2.6)
+    {Concat$(Z_1, Z_2, Z_3, Z_4)$};
+\draw[-{Stealth}, thick] (z1.south) |- (concat.west);
+\draw[-{Stealth}, thick] (z2.south) -- (concat.north);
+\draw[-{Stealth}, thick] (z3.south) -- (concat.north);
+\draw[-{Stealth}, thick] (z4.south) |- (concat.east);
+
+% ── Proyección final ─────────────────────────────────────────
+\node[box, fill=purple!8, draw=purple!40] (proj) at (3.5, 1.5)
+    {Proyecci\'on lineal $W^O$};
+\draw[-{Stealth}, thick] (concat)--(proj);
+
+% ── Salida ───────────────────────────────────────────────────
+\node[box] (out) at (3.5, 0.5)
+    {Salida $\in \mathbb{R}^{n \times d_{\text{model}}}$};
+\draw[-{Stealth}, thick] (proj)--(out);
+
+% ── Anotación ────────────────────────────────────────────────
+\node[draw=blue!15, fill=blue!4, rounded corners, font=\footnotesize,
+      inner sep=6pt, align=left] at (9.6, 3.8)
+    {Cada cabeza aprende\\un tipo de relaci\'on\\distinto en paralelo:\\[4pt]
+     \textcolor{blue!70}{Head 1:} sint\'actica\\
+     \textcolor{red!60}{Head 2:} sem\'antica\\
+     \textcolor{green!60!black}{Head 3:} correferencia\\
+     \textcolor{orange!70}{Head 4:} posici\'on};
+
+\node[draw=gray!30, fill=gray!5, rounded corners, font=\small,
+      inner sep=6pt, align=center] at (9.6, 1.2)
+    {$\text{MHA}(Q,K,V) =$\\[4pt]
+     $\text{Concat}(\text{head}_1,\ldots,\text{head}_h)W^O$};
+
+\end{tikzpicture}
+\caption{Atenci\'on multi-cabeza. La entrada se proyecta $h$ veces con
+matrices independientes; cada cabeza opera en un subespacio de dimensi\'on
+$d_k = d_{\text{model}}/h$. Las salidas se concatenan y se proyectan con
+$W^O$~\cite{vaswani2017attention}.}
+\label{fig:multihead}
+\end{figure}

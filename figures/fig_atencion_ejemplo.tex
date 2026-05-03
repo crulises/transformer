@@ -1,0 +1,104 @@
+% ============================================================
+% fig_atencion_ejemplo.tex — Ejemplo numérico Q, K, V (3 tokens)
+% Uso: \input{figures/fig_atencion_ejemplo}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    cell/.style={draw=gray!40, minimum width=1.1cm, minimum height=0.60cm,
+                 font=\footnotesize, inner sep=2pt},
+    hdr/.style={font=\footnotesize\bfseries},
+    qc/.style={fill=blue!12},
+    kc/.style={fill=red!10},
+    vc/.style={fill=green!10},
+    sc/.style={fill=orange!12},
+    ac/.style={fill=purple!10},
+    zc/.style={fill=teal!10},
+    stepnode/.style={font=\small\bfseries, blue!70}
+]
+
+\node[font=\small\bfseries, gray] at (5.0, 8.5)
+    {Secuencia: \textit{gato} $(t_1)$ \quad \textit{comi\'o} $(t_2)$ \quad
+     \textit{rat\'on} $(t_3)$ \quad --- \quad $d_k = d_v = 2$};
+
+% ── PASO 1: Matrices Q, K, V ─────────────────────────────────
+\node[stepnode] at (-0.5, 7.7) {Paso 1};
+\foreach \lbl/\x in {Q/1.5, K/4.0, V/6.5}{
+    \node[hdr] at (\x, 7.7) {$\lbl$};
+}
+\foreach \lbl/\y in {$t_1$/7.1, $t_2$/6.45, $t_3$/5.80}{
+    \node[font=\footnotesize] at (0.3, \y) {\lbl};
+}
+% Q
+\node[cell,qc] at (1.1,7.10){1.0}; \node[cell,qc] at (2.0,7.10){0.0};
+\node[cell,qc] at (1.1,6.45){0.0}; \node[cell,qc] at (2.0,6.45){1.0};
+\node[cell,qc] at (1.1,5.80){1.0}; \node[cell,qc] at (2.0,5.80){1.0};
+% K
+\node[cell,kc] at (3.6,7.10){1.0}; \node[cell,kc] at (4.5,7.10){0.0};
+\node[cell,kc] at (3.6,6.45){1.0}; \node[cell,kc] at (4.5,6.45){1.0};
+\node[cell,kc] at (3.6,5.80){0.0}; \node[cell,kc] at (4.5,5.80){1.0};
+% V
+\node[cell,vc] at (6.1,7.10){1.0}; \node[cell,vc] at (7.0,7.10){0.0};
+\node[cell,vc] at (6.1,6.45){0.5}; \node[cell,vc] at (7.0,6.45){0.5};
+\node[cell,vc] at (6.1,5.80){0.0}; \node[cell,vc] at (7.0,5.80){1.0};
+
+% ── PASO 2: Scores ───────────────────────────────────────────
+\node[stepnode] at (-0.5, 4.85) {Paso 2};
+\node[hdr, align=center] at (1.8, 4.85) {$S = QK^{\top}/\sqrt{2}$};
+\foreach \lbl/\x in {$t_1$/1.1, $t_2$/2.2, $t_3$/3.3}{
+    \node[font=\footnotesize] at (\x, 4.35) {\lbl};
+}
+\foreach \lbl/\y in {$t_1$/3.85, $t_2$/3.20, $t_3$/2.55}{
+    \node[font=\footnotesize] at (0.3, \y) {\lbl};
+}
+\node[cell,sc] at (1.1,3.85){0.71}; \node[cell,sc] at (2.2,3.85){0.71}; \node[cell,sc] at (3.3,3.85){0.00};
+\node[cell,sc] at (1.1,3.20){0.00}; \node[cell,sc] at (2.2,3.20){0.71}; \node[cell,sc] at (3.3,3.20){0.71};
+\node[cell,sc] at (1.1,2.55){0.71}; \node[cell,sc] at (2.2,2.55){1.41}; \node[cell,sc] at (3.3,2.55){0.71};
+
+% ── Flecha softmax ───────────────────────────────────────────
+\draw[-{Stealth}, thick, gray!60] (3.8, 3.2) -- (4.6, 3.2);
+\node[font=\tiny, gray, align=center] at (4.2, 3.5) {softmax\\por fila};
+
+% ── PASO 3: Pesos α ──────────────────────────────────────────
+\node[stepnode] at (5.2, 4.85) {Paso 3};
+\node[hdr, align=center] at (6.8, 4.85) {$A = \text{softmax}(S)$};
+\foreach \lbl/\x in {$t_1$/5.6, $t_2$/6.7, $t_3$/7.8}{
+    \node[font=\footnotesize] at (\x, 4.35) {\lbl};
+}
+\foreach \lbl/\y in {$t_1$/3.85, $t_2$/3.20, $t_3$/2.55}{
+    \node[font=\footnotesize] at (4.9, \y) {\lbl};
+}
+\node[cell,ac] at (5.6,3.85){0.37}; \node[cell,ac] at (6.7,3.85){0.37}; \node[cell,ac] at (7.8,3.85){0.26};
+\node[cell,ac] at (5.6,3.20){0.26}; \node[cell,ac] at (6.7,3.20){0.37}; \node[cell,ac] at (7.8,3.20){0.37};
+\node[cell,ac] at (5.6,2.55){0.24}; \node[cell,ac] at (6.7,2.55){0.52}; \node[cell,ac] at (7.8,2.55){0.24};
+
+% ── PASO 4: Z = A·V ──────────────────────────────────────────
+\node[stepnode] at (3.0, 1.85) {Paso 4};
+\node[hdr, align=center] at (5.2, 1.85) {$Z = A \cdot V$};
+\foreach \lbl/\x in {dim1/4.6, dim2/5.7}{
+    \node[font=\footnotesize] at (\x, 1.35) {\lbl};
+}
+\foreach \lbl/\y in {$z_1$/0.90, $z_2$/0.25, $z_3$/-0.40}{
+    \node[font=\footnotesize] at (3.8, \y) {\lbl};
+}
+\node[cell,zc] at (4.6, 0.90){0.56}; \node[cell,zc] at (5.7, 0.90){0.44};
+\node[cell,zc] at (4.6, 0.25){0.44}; \node[cell,zc] at (5.7, 0.25){0.56};
+\node[cell,zc] at (4.6,-0.40){0.50}; \node[cell,zc] at (5.7,-0.40){0.50};
+
+\draw[-{Stealth}, thick, gray!60]
+    (7.3, 2.55) -- ++(0,-0.4) -- ++(-1.1,0) -- ++(0,-0.4);
+\node[font=\tiny, gray] at (8.3, 2.1) {$Z = A \cdot V$};
+
+\node[draw=gray!30, fill=gray!5, rounded corners, font=\tiny,
+      inner sep=5pt, align=left] at (8.8, 0.3)
+    {Fila $i$ de $Z$: representaci\'on de $t_i$\\
+     contextualizada por toda la secuencia.};
+
+\end{tikzpicture}
+\caption{Ejemplo num\'erico de atenci\'on escalada con 3 tokens ($d_k=d_v=2$).
+\textbf{Paso 1:} matrices $Q$, $K$, $V$.
+\textbf{Paso 2:} scores $S=QK^\top/\sqrt{d_k}$.
+\textbf{Paso 3:} pesos $\alpha_{ij}$ tras softmax por fila.
+\textbf{Paso 4:} salida $Z=AV$. Valores ilustrativos.}
+\label{fig:atencion_ejemplo}
+\end{figure}

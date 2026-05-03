@@ -14,16 +14,15 @@
                 minimum width=1.0cm, minimum height=0.6cm, font=\small},
     box/.style={draw=gray!40, rounded corners, fill=white,
                 inner sep=6pt, font=\footnotesize, align=left},
-    arrow/.style={-{Stealth}, thick, gray},
-    step/.style={font=\small\bfseries, blue!70}
+    stepnode/.style={font=\small\bfseries, blue!70}
 ]
 
 % ── Oración completa (referencia) ───────────────────────────
 \node[font=\small\bfseries, gray] at (3.5, 6.8)
-    {Oración: \textit{``Vi a la estrella con el telescopio''}};
+    {Oraci\'on: \textit{``Vi a la estrella con el telescopio''}};
 
 % ── PASO 1: token aislado ────────────────────────────────────
-\node[step] at (-0.5, 5.9) {Paso 1};
+\node[stepnode] at (-0.5, 5.9) {Paso 1};
 \node[box]  at (4.2, 5.85) {Sin contexto: \textbf{``estrella''} puede ser\\
     \textcolor{blue!70}{$\bullet$ astro celeste} \quad
     \textcolor{orange!80}{$\bullet$ persona famosa}};
@@ -32,60 +31,47 @@
 \node[font=\tiny, red!60] at (1.8, 5.45) {ambigua};
 
 % ── PASO 2: ventana pequeña (±2) ─────────────────────────────
-\node[step] at (-0.5, 4.6) {Paso 2};
+\node[stepnode] at (-0.5, 4.6) {Paso 2};
 \node[box]  at (4.5, 4.55) {Ventana $\pm 2$: \textit{``la estrella con el''}\\
-    Sigue ambigua: sin información resolutoria.};
+    Sigue ambigua: sin informaci\'on resolutoria.};
 
-\foreach \w/\i/\st in {la/0/ctx, estrella/1/focus, con/2/ctx, el/3/ctx}{
-    \pgfmathparse{int(\i==1)}
-    \ifnum\pgfmathresult=1
-        \node[focus] at (\i*1.1, 4.55) {\w};
-    \else
-        \node[ctx]   at (\i*1.1, 4.55) {\w};
-    \fi
-}
-\node[font=\tiny, red!60] at (1.1, 4.15) {aún ambigua};
+\node[word]  at (0.0,  4.55) {la};
+\node[focus] at (1.1,  4.55) {estrella};
+\node[ctx]   at (2.2,  4.55) {con};
+\node[ctx]   at (3.3,  4.55) {el};
+\node[font=\tiny, red!60] at (1.1, 4.15) {a\'un ambigua};
 
 % ── PASO 3: oración completa ────────────────────────────────
-\node[step] at (-0.5, 3.2) {Paso 3};
+\node[stepnode] at (-0.5, 3.2) {Paso 3};
 \node[box, fill=green!5] at (5.0, 3.15)
-    {Oración completa: \textit{``con el telescopio''}\\
-    $\Rightarrow$ instrumento óptico $\Rightarrow$
+    {Oraci\'on completa: \textit{``con el telescopio''}\\
+    $\Rightarrow$ instrumento \'optico $\Rightarrow$
     \textcolor{green!50!black}{\textbf{astro celeste}}};
 
-\foreach \w/\i in {Vi/0, a/1, la/2, estrella/3, con/4, el/5, telescopio/6}{
-    \pgfmathparse{int(\i==3)}
-    \ifnum\pgfmathresult=1
-        \node[focus] at (\i*1.05, 3.15) {\w};
-    \else
-        \pgfmathparse{int(\i==6 || \i==5 || \i==4)}
-        \ifnum\pgfmathresult=1
-            \node[ctx, draw=green!50!black, fill=green!10] at (\i*1.05, 3.15) {\w};
-        \else
-            \node[word] at (\i*1.05, 3.15) {\w};
-        \fi
-    \fi
-}
+\node[word]  at (0.0,  3.15) {Vi};
+\node[word]  at (1.05, 3.15) {a};
+\node[word]  at (2.10, 3.15) {la};
+\node[focus] at (3.15, 3.15) {estrella};
+\node[ctx, draw=green!50!black, fill=green!10] at (4.20, 3.15) {con};
+\node[ctx, draw=green!50!black, fill=green!10] at (5.25, 3.15) {el};
+\node[ctx, draw=green!50!black, fill=green!10] at (6.30, 3.15) {telescopio};
 
 % Arco resolutorio
 \draw[-{Stealth}, green!60!black, thick]
-    (6.3, 2.82) .. controls (6.3, 2.2) and (3.15, 2.2) .. (3.15, 2.82);
+    (6.30, 2.82) .. controls (6.30, 2.2) and (3.15, 2.2) .. (3.15, 2.82);
 \node[font=\tiny, green!50!black] at (4.7, 1.95)
-    {\textit{``telescopio''} resuelve la ambigüedad de \textit{``estrella''}};
+    {\textit{``telescopio''} resuelve la ambig\"uedad de \textit{``estrella''}};
 
 % ── Conclusión ───────────────────────────────────────────────
 \node[draw=blue!25, fill=blue!5, rounded corners, font=\footnotesize,
       inner sep=7pt, align=center] at (3.5, 1.1)
-    {El significado correcto requiere acceso a \textbf{toda} la oración,\\
-     no solo a una ventana local. Un modelo que no tenga acceso\\
-     global al contexto no puede resolver esta ambigüedad.};
+    {El significado correcto requiere acceso a \textbf{toda} la oraci\'on,\\
+     no solo a una ventana local.};
 
 \end{tikzpicture}
-\caption{Análisis paso a paso de la resolución de ambigüedad en la oración
-\textit{``Vi a la estrella con el telescopio''}. En el Paso 1, el token
-\textit{estrella} es ambiguo en aislamiento. En el Paso 2, una ventana local
-no aporta información resolutoria. Solo en el Paso 3, con acceso a toda la
-oración, la palabra \textit{telescopio} permite inferir que \textit{estrella}
-se refiere a un astro y no a una persona famosa.}
+\caption{An\'alisis paso a paso de la resoluci\'on de ambig\"uedad en
+\textit{``Vi a la estrella con el telescopio''}. Solo con acceso a toda
+la oraci\'on (Paso 3) la palabra \textit{telescopio} permite inferir que
+\textit{estrella} refiere a un astro.}
 \label{fig:ejemplo_contexto}
 \end{figure}

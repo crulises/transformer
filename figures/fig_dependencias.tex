@@ -17,61 +17,49 @@
     pron/.style={draw=orange!70, rounded corners, fill=orange!12,
                  minimum width=1.05cm, minimum height=0.62cm,
                  font=\scriptsize\bfseries, inner sep=2pt},
-    arc/.style={thick, -{Stealth}},
     lbl/.style={font=\tiny, align=center}
 ]
 
-% ── Oración ─────────────────────────────────────────────────
-% "El científico que ganó el premio Nobel de física de este año presentó su investigación"
-%  0          1    2      3   4       5     6  7      8          9         10   11
-\def\words{{"El","cient.","que","ganó","el","premio","Nobel","de","física","presentó","su","invest."}}
-\def\styles{{0,1,0,0,0,0,0,0,0,2,3,0}}
-% styles: 0=word, 1=subj, 2=verb, 3=pron
+% ── Tokens colocados manualmente (12 tokens) ─────────────────
+\node[subj] (t0)  at (0*1.08, 3.2) {El};
+\node[subj] (t1)  at (1*1.08, 3.2) {cient.};
+\node[word] (t2)  at (2*1.08, 3.2) {que};
+\node[word] (t3)  at (3*1.08, 3.2) {gan\'o};
+\node[word] (t4)  at (4*1.08, 3.2) {el};
+\node[word] (t5)  at (5*1.08, 3.2) {premio};
+\node[word] (t6)  at (6*1.08, 3.2) {Nobel};
+\node[word] (t7)  at (7*1.08, 3.2) {de};
+\node[word] (t8)  at (8*1.08, 3.2) {f\'isica};
+\node[verb] (t9)  at (9*1.08, 3.2) {present\'o};
+\node[pron] (t10) at (10*1.08,3.2) {su};
+\node[word] (t11) at (11*1.08,3.2) {invest.};
 
-\foreach \i in {0,...,11}{
-    \pgfmathsetmacro\w{{\words}[\i]}
-    \pgfmathsetmacro\s{int({\styles}[\i])}
-    \pgfmathparse{int(\s==1)}
-    \ifnum\pgfmathresult=1 \node[subj] at (\i*1.08, 3.2) {\w};
-    \else
-        \pgfmathparse{int(\s==2)}
-        \ifnum\pgfmathresult=1 \node[verb] at (\i*1.08, 3.2) {\w};
-        \else
-            \pgfmathparse{int(\s==3)}
-            \ifnum\pgfmathresult=1 \node[pron] at (\i*1.08, 3.2) {\w};
-            \else \node[word] at (\i*1.08, 3.2) {\w};
-            \fi
-        \fi
-    \fi
-}
-
-% ── Arco: sujeto → verbo (dependencia larga) ────────────────
-\draw[arc, blue!60]
-    (1.08, 3.51) .. controls (1.08, 4.6) and (9.72, 4.6) .. (9.72, 3.51);
+% ── Arco: sujeto → verbo (dependencia larga) ─────────────────
+\draw[-{Stealth}, blue!60, thick]
+    (t1.north) .. controls (1.08, 4.6) and (9.72, 4.6) .. (t9.north);
 \node[lbl, blue!70] at (5.4, 4.85)
-    {dependencia sujeto–verbo \\ (8 tokens de distancia)};
+    {dependencia sujeto--verbo \\ (8 tokens de distancia)};
 
-% ── Arco: pronombre → sujeto (correferencia) ────────────────
-\draw[arc, orange!80]
-    (10.8, 2.89) .. controls (10.8, 1.8) and (1.08, 1.8) .. (1.08, 2.89);
+% ── Arco: pronombre → sujeto (correferencia) ─────────────────
+\draw[-{Stealth}, orange!80, thick]
+    (t10.south) .. controls (10.8, 1.8) and (1.08, 1.8) .. (t1.south);
 \node[lbl, orange!70] at (5.4, 1.4)
-    {\textit{``su''} refiere a \textit{``científico''} \\ (correferencia a distancia)};
+    {\textit{``su''} refiere a \textit{``cient.''} \\ (correferencia a distancia)};
 
 % ── Leyenda ──────────────────────────────────────────────────
-\node[subj, label=right:{\scriptsize sujeto}]  at (0.0,  0.55) {};
-\node[verb, label=right:{\scriptsize verbo}]   at (2.3,  0.55) {};
-\node[pron, label=right:{\scriptsize pronombre}] at (4.6, 0.55) {};
+\node[subj, label=right:{\scriptsize sujeto}]    at (0.0,  0.55) {};
+\node[verb, label=right:{\scriptsize verbo}]     at (2.5,  0.55) {};
+\node[pron, label=right:{\scriptsize pronombre}] at (5.0,  0.55) {};
 
 % ── Nota ─────────────────────────────────────────────────────
 \node[draw=gray!30, fill=gray!5, rounded corners, font=\tiny,
-      inner sep=5pt, align=left] at (8.5, 0.55)
-    {Un MLP con ventana de contexto fija\\ no puede conectar tokens tan alejados.\\ Un Transformer sí: la atención es global.};
+      inner sep=5pt, align=left] at (9.5, 0.55)
+    {Un MLP con ventana fija no puede\\ conectar tokens tan alejados.\\ Un Transformer s\'i: la atenci\'on es global.};
 
 \end{tikzpicture}
 \caption{Dependencia de largo alcance y correferencia. El verbo
-\textit{presentó} concuerda en número con \textit{científico}, su sujeto,
-separados por 8 tokens. El pronombre \textit{su} refiere también al mismo
-sujeto. Ambas relaciones requieren acceder a contexto distante, algo que
-los modelos de ventana fija no pueden garantizar.}
+\textit{present\'o} concuerda con \textit{cient\'ifico}, su sujeto,
+separados por 8 tokens. El pronombre \textit{su} refiere tambi\'en al mismo
+sujeto. Ambas relaciones requieren acceder a contexto distante.}
 \label{fig:dependencias}
 \end{figure}

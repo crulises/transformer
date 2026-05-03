@@ -1,0 +1,79 @@
+% ============================================================
+% fig_qkv.tex — Mecanismo Q, K, V
+% Uso: \input{figures/fig_qkv}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    vec/.style={draw, rounded corners, minimum width=1.0cm,
+                minimum height=0.55cm, font=\footnotesize, inner sep=3pt},
+    q/.style={vec, fill=blue!15,  draw=blue!50},
+    k/.style={vec, fill=red!12,   draw=red!45},
+    v/.style={vec, fill=green!12, draw=green!50!black},
+    op/.style={draw=gray!50, fill=gray!8, rounded corners,
+               minimum width=1.1cm, minimum height=0.55cm,
+               font=\footnotesize, align=center}
+]
+
+% ── Entrada ──────────────────────────────────────────────────
+\node[vec, fill=gray!12, draw=gray!50, minimum width=2.0cm]
+    (x) at (0, 0) {$\bm{x}_i \in \mathbb{R}^{d_{\text{model}}}$};
+
+% ── Proyecciones ─────────────────────────────────────────────
+\node[q, minimum width=1.5cm] (q) at (-2.8, -1.8)
+    {$\bm{q}_i = W_Q \bm{x}_i$};
+\node[k, minimum width=1.5cm] (k) at ( 0.0, -1.8)
+    {$\bm{k}_j = W_K \bm{x}_j$};
+\node[v, minimum width=1.5cm] (v) at ( 2.8, -1.8)
+    {$\bm{v}_j = W_V \bm{x}_j$};
+
+\draw[-{Stealth}, thick, blue!60]  (x.south) -- ++(-2.8,0) -- (q.north);
+\draw[-{Stealth}, thick, red!50]   (x.south) -- (k.north);
+\draw[-{Stealth}, thick, green!60!black] (x.south) -- ++(2.8,0) -- (v.north);
+
+\node[blue!60,  font=\tiny] at (-1.8,-0.8) {$W_Q$};
+\node[red!50,   font=\tiny] at ( 0.3,-0.9) {$W_K$};
+\node[green!60!black, font=\tiny] at (1.8,-0.8) {$W_V$};
+
+% ── Producto Q·K^T ───────────────────────────────────────────
+\node[op] (dot) at (-1.4, -3.3) {$\bm{q}_i \cdot \bm{k}_j^{\top}$};
+\draw[-{Stealth}, thick, gray] (q.south) -- ++(0,-0.7) -| (dot.north);
+\draw[-{Stealth}, thick, gray] (k.south) -- ++(0,-0.7) -| (dot.north);
+
+% ── Escalado ─────────────────────────────────────────────────
+\node[op] (scale) at (-1.4, -4.5) {$/\sqrt{d_k}$};
+\draw[-{Stealth}, thick] (dot) -- (scale);
+
+% ── Softmax ──────────────────────────────────────────────────
+\node[op, fill=orange!10, draw=orange!50] (softmax) at (-1.4, -5.7) {softmax};
+\draw[-{Stealth}, thick] (scale) -- (softmax);
+\node[font=\footnotesize\bfseries, orange!70] at (0.2,-5.7) {$\alpha_{ij}$};
+
+% ── Suma ponderada ───────────────────────────────────────────
+\node[op, fill=green!8, draw=green!50!black] (out) at (1.4, -7.0)
+    {$\sum_j \alpha_{ij}\,\bm{v}_j$};
+\draw[-{Stealth}, thick, orange!60]    (softmax.south) -- ++(0,-0.6) -| (out.north);
+\draw[-{Stealth}, thick, green!60!black] (v.south)     -- ++(0,-4.5) -- (out.north);
+
+% ── Salida ───────────────────────────────────────────────────
+\node[vec, fill=purple!10, draw=purple!40, minimum width=1.8cm]
+    (z) at (1.4, -8.2) {$\bm{z}_i \in \mathbb{R}^{d_v}$};
+\draw[-{Stealth}, thick] (out) -- (z);
+\node[font=\footnotesize, gray, align=center] at (3.4,-8.2)
+    {representaci\'on\\contextualizada};
+
+% ── Fórmula ──────────────────────────────────────────────────
+\node[draw=blue!20, fill=blue!5, rounded corners, font=\small,
+      inner sep=7pt, align=center] at (5.5, -4.5)
+    {$\text{Attention}(Q,K,V)$\\[4pt]
+     $=\,\text{softmax}\!\left(\dfrac{QK^{\top}}{\sqrt{d_k}}\right)V$};
+
+\end{tikzpicture}
+\caption{Mecanismo de atenci\'on de producto escalar escalado. A partir de
+$\bm{x}_i$ se generan tres proyecciones: consulta $\bm{q}_i$, clave
+$\bm{k}_j$ y valor $\bm{v}_j$. El producto $\bm{q}_i \cdot \bm{k}_j^\top$
+mide la afinidad, se escala por $\sqrt{d_k}$ y se normaliza con softmax
+para obtener los pesos $\alpha_{ij}$. La salida $\bm{z}_i$ es la suma
+ponderada de los valores~\cite{vaswani2017attention}.}
+\label{fig:qkv}
+\end{figure}

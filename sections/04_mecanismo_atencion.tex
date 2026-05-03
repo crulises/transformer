@@ -1,0 +1,210 @@
+\section{El mecanismo de atención}
+\label{sec:mecanismo_atencion}
+
+Las secciones anteriores identificaron la limitación central de los modelos
+clásicos: ninguno dispone de un mecanismo que permita que cada elemento de
+una secuencia acceda, de forma dinámica y dependiente del contenido, a la
+información de cualquier otro elemento. Esta sección presenta la solución
+que los Transformers proponen: el \textit{mecanismo de atención}.
+
+%------------------------------------------------------------
+\subsection{Intuición: ¿qué significa ``prestar atención''?}
+\label{subsec:atencion_intuicion}
+
+La idea central es sencilla. Cuando un ser humano lee la oración
+\textit{``El gato comió el ratón''} y quiere entender el verbo
+\textit{comió}, no lo procesa en aislamiento: busca activamente quién
+realiza la acción (sujeto: \textit{gato}) y sobre qué recae (objeto:
+\textit{ratón}). Esta capacidad de enfocarse selectivamente en las partes
+relevantes del contexto es exactamente lo que el mecanismo de atención
+implementa de forma computacional.
+
+Formalmente, para cada token de la secuencia, la atención calcula un
+\textit{peso} $\alpha_{ij}$ que indica cuánta relevancia tiene el token $j$
+para representar al token $i$. La representación final del token $i$ es
+entonces una \textit{suma ponderada} de las representaciones de todos los
+demás tokens:
+
+\begin{equation}
+    \bm{z}_i = \sum_{j=1}^{n} \alpha_{ij}\, \bm{v}_j
+    \qquad \text{con} \quad \alpha_{ij} \geq 0, \quad \sum_j \alpha_{ij} = 1
+\end{equation}
+
+\input{figures/fig_atencion_intuicion}
+
+Tres propiedades de este mecanismo lo distinguen radicalmente de los modelos
+clásicos:
+
+\begin{enumerate}
+    \item \textbf{Global:} todos los tokens pueden relacionarse con todos,
+    sin restricción de distancia.
+    \item \textbf{Dinámico:} los pesos $\alpha_{ij}$ se calculan en función
+    del contenido de la secuencia, no son parámetros fijos.
+    \item \textbf{Paralelo:} el cómputo de todos los $\alpha_{ij}$ puede
+    realizarse simultáneamente, sin procesamiento secuencial.
+\end{enumerate}
+
+%------------------------------------------------------------
+\subsection{De la intuición a las matrices: Q, K y V}
+\label{subsec:qkv}
+
+La implementación práctica del mecanismo requiere operacionalizar la noción
+de relevancia entre tokens. Vaswani et al.~\cite{vaswani2017attention}
+proponen una analogía con los sistemas de recuperación de información: un
+token emite una \textit{consulta} sobre qué necesita, el resto de los tokens
+expone sus \textit{claves} (qué ofrecen), y la similitud entre consulta y
+claves determina qué \textit{valores} se recuperan.
+
+Concretamente, a partir de la representación de entrada $\bm{x}_i$ de cada
+token se generan tres vectores mediante proyecciones lineales aprendidas:
+
+\begin{align}
+    \bm{q}_i &= W_Q\, \bm{x}_i \quad \in \mathbb{R}^{d_k}
+    \quad \text{(\textit{query}: qué busca este token)} \\
+    \bm{k}_j &= W_K\, \bm{x}_j \quad \in \mathbb{R}^{d_k}
+    \quad \text{(\textit{key}: qué ofrece cada token)}   \\
+    \bm{v}_j &= W_V\, \bm{x}_j \quad \in \mathbb{R}^{d_v}
+    \quad \text{(\textit{value}: qué información aporta)}
+\end{align}
+
+\noindent donde $W_Q, W_K \in \mathbb{R}^{d_k \times d_{\text{model}}}$ y
+$W_V \in \mathbb{R}^{d_v \times d_{\text{model}}}$ son matrices de peso
+aprendidas. La relevancia entre los tokens $i$ y $j$ se mide mediante el
+producto escalar $\bm{q}_i \cdot \bm{k}_j^\top$.
+
+\input{figures/fig_qkv}
+
+%------------------------------------------------------------
+\subsection{Atención de producto escalar escalado}
+\label{subsec:scaled_dot_product}
+
+Operando sobre toda la secuencia de forma matricial, las consultas, claves
+y valores se apilan en matrices $Q \in \mathbb{R}^{n \times d_k}$,
+$K \in \mathbb{R}^{n \times d_k}$ y $V \in \mathbb{R}^{n \times d_v}$.
+La atención se computa entonces como:
+
+\begin{equation}
+    \text{Attention}(Q, K, V) =
+    \text{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right) V
+    \label{eq:attention}
+\end{equation}
+
+Cada componente cumple un rol preciso:
+
+\begin{itemize}
+    \item $QK^{\top}$: matriz de \textit{scores} de afinidad entre todos los
+    pares de tokens. El elemento $(i,j)$ mide cuánto se parece la consulta
+    del token $i$ a la clave del token $j$.
+
+    \item $1/\sqrt{d_k}$: factor de escala que estabiliza el entrenamiento.
+    Para dimensiones $d_k$ grandes, los productos escalares crecen en
+    magnitud y empujan a la función softmax hacia regiones de gradiente
+    muy pequeño; dividir por $\sqrt{d_k}$ corrige este efecto~\cite{vaswani2017attention}.
+
+    \item $\text{softmax}(\cdot)$: normaliza los scores por fila, produciendo
+    pesos $\alpha_{ij} \in (0,1)$ con $\sum_j \alpha_{ij} = 1$, interpretables
+    como una distribución de probabilidad sobre la secuencia.
+
+    \item $V$: los pesos se aplican sobre los valores, produciendo para cada
+    token una representación contextualizada que integra información de toda
+    la secuencia ponderada por relevancia.
+\end{itemize}
+
+%------------------------------------------------------------
+\subsection{Ejemplo numérico paso a paso}
+\label{subsec:atencion_ejemplo}
+
+Para concretar el mecanismo, se presenta un ejemplo con la secuencia
+\textit{gato–comió–ratón} ($n = 3$ tokens, $d_k = d_v = 2$). Los valores
+numéricos son ilustrativos y están elegidos para producir un resultado
+interpretable.
+
+\input{figures/fig_atencion_ejemplo}
+
+La fila $i$ de la salida $Z$ contiene la representación contextualizada
+del token $i$. El token \textit{comió} ($t_2$) obtiene pesos similares
+hacia \textit{gato} (0.37) y \textit{ratón} (0.37), reflejando que ambos
+son igualmente relevantes para el verbo: uno como sujeto y el otro como
+objeto. Este resultado emerge naturalmente del producto escalar entre
+vectores, sin reglas explícitas.
+
+%------------------------------------------------------------
+\subsection{Atención multi-cabeza}
+\label{subsec:multihead}
+
+Un único mecanismo de atención puede capturar un tipo de relación a la vez.
+Sin embargo, una oración contiene simultáneamente relaciones sintácticas,
+semánticas, de correferencia, posicionales, entre otras. La
+\textit{atención multi-cabeza} (\textit{Multi-Head Attention}) resuelve
+esto ejecutando $h$ mecanismos de atención en paralelo, cada uno con sus
+propias matrices de proyección:
+
+\begin{equation}
+    \text{head}_l = \text{Attention}(Q W_Q^l,\; K W_K^l,\; V W_V^l)
+    \qquad l = 1, \ldots, h
+\end{equation}
+
+Las salidas de cada cabeza se concatenan y se proyectan con una matriz
+$W^O \in \mathbb{R}^{h d_v \times d_{\text{model}}}$:
+
+\begin{equation}
+    \text{MultiHead}(Q, K, V) =
+    \text{Concat}(\text{head}_1, \ldots, \text{head}_h)\, W^O
+\end{equation}
+
+Para mantener el costo computacional constante, cada cabeza opera en un
+subespacio de dimensión reducida: $d_k = d_v = d_{\text{model}} / h$.
+
+\input{figures/fig_multihead}
+
+%------------------------------------------------------------
+\subsection{Auto-atención y máscara causal}
+\label{subsec:autoatencion}
+
+Cuando $Q$, $K$ y $V$ se derivan de la misma secuencia de entrada, el
+mecanismo se denomina \textit{auto-atención} (\textit{self-attention}):
+cada token se relaciona con todos los demás tokens de la misma secuencia.
+Es el mecanismo central del encoder de un Transformer.
+
+Para tareas de generación autoregresiva, donde el modelo predice el
+siguiente token sin acceder a tokens futuros, se aplica una
+\textit{máscara causal}: una matriz que fuerza a $-\infty$ los scores
+de los pares $(i, j)$ con $j > i$ antes del softmax:
+
+\begin{equation}
+    \text{Attention}_{\text{causal}}(Q,K,V) =
+    \text{softmax}\!\left(\frac{QK^{\top} + M}{\sqrt{d_k}}\right) V
+\end{equation}
+
+\noindent donde $M_{ij} = -\infty$ si $j > i$ y $0$ en caso contrario.
+Esto garantiza que el token $i$ solo vea los tokens anteriores, manteniendo
+la propiedad autoregresiva sin sacrificar el paralelismo durante el
+entrenamiento.
+
+%------------------------------------------------------------
+\subsection{Conexión con los modelos clásicos}
+\label{subsec:atencion_conexion}
+
+El mecanismo de atención generaliza varios conceptos ya estudiados:
+
+\begin{itemize}
+    \item \textbf{Hopfield}: la suma ponderada $\sum_j \alpha_{ij} \bm{v}_j$
+    es formalmente análoga a la recuperación de memoria asociativa. Los
+    pesos $\alpha_{ij}$ reemplazan la dinámica de minimización de energía
+    por un cómputo diferenciable y paralelizable. Ramsauer et
+    al.~\cite{ramsauer2020hopfield} demuestran esta equivalencia formalmente.
+
+    \item \textbf{SOM}: los embeddings sobre los que opera la atención son
+    espacios de representación distribuida donde la proximidad geométrica
+    refleja similitud semántica, análogos a los mapas de Kohonen.
+
+    \item \textbf{MLP}: las proyecciones $W_Q$, $W_K$, $W_V$ son
+    transformaciones lineales aprendidas —el mismo bloque fundamental
+    de los MLPs— pero utilizadas aquí para construir representaciones
+    relacionales en lugar de clasificar directamente.
+\end{itemize}
+
+La atención no descarta lo construido por los modelos clásicos: lo integra
+y generaliza para resolver las limitaciones identificadas en la
+Sección~\ref{sec:problema_nlp}. La siguiente sección describe cómo este
+mecanismo se ensambla dentro de la arquitectura completa del Transformer.
