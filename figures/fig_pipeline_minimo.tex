@@ -1,0 +1,87 @@
+% ============================================================
+% fig_pipeline_minimo.tex — Pipeline del Transformer mínimo
+% Uso: \input{figures/fig_pipeline_minimo}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    blk/.style={draw, rounded corners, minimum width=2.4cm,
+                minimum height=0.7cm, font=\small, align=center},
+    inp/.style={blk, fill=gray!10,    draw=gray!50},
+    emb/.style={blk, fill=purple!10,  draw=purple!40},
+    pos/.style={blk, fill=teal!10,    draw=teal!50},
+    enc/.style={blk, fill=blue!10,    draw=blue!40},
+    out/.style={blk, fill=orange!10,  draw=orange!50},
+    sft/.style={blk, fill=green!10,   draw=green!50!black},
+    arrow/.style={-{Stealth}, thick},
+    lbl/.style={font=\tiny, gray, align=center}
+]
+
+% ── Tokens de entrada ────────────────────────────────────────
+\node[inp] (chars) at (0, 0) {``hola''\\{\tiny $[h,o,l,a]$}};
+\node[lbl] at (0, -0.75) {caracteres};
+
+% ── Índices enteros ──────────────────────────────────────────
+\node[inp] (idx) at (2.8, 0) {índices\\{\tiny $[7,14,11,0]$}};
+\node[lbl] at (2.8, -0.75) {vocabulario $|\mathcal{V}|$};
+
+% ── Embedding ─────────────────────────────────────────────────
+\node[emb] (emb) at (5.6, 0) {Embedding\\{\tiny $\mathbb{R}^{n \times d_{\text{model}}}$}};
+\node[lbl] at (5.6, -0.75) {$E \in \mathbb{R}^{|\mathcal{V}| \times d}$};
+
+% ── Positional Encoding ───────────────────────────────────────
+\node[pos] (pe) at (8.4, 0) {Positional\\Encoding};
+\node[lbl] at (8.4, -0.75) {$\bm{x}'_t = \bm{e}_t + PE_t$};
+
+% ── Encoder (N bloques) ───────────────────────────────────────
+\node[enc] (enc) at (11.2, 0) {Encoder\\{\tiny $\times N$ bloques}};
+\node[lbl] at (11.2, -0.75) {MHA + FFN + Norm};
+
+% ── Proyección lineal ─────────────────────────────────────────
+\node[out] (lin) at (11.2, -2.0) {Linear\\{\tiny $\mathbb{R}^{d} \to \mathbb{R}^{|\mathcal{V}|}$}};
+
+% ── Softmax ──────────────────────────────────────────────────
+\node[sft] (sft) at (8.4, -2.0) {Softmax};
+\node[lbl] at (8.4, -2.75) {$P(\text{siguiente car.})$};
+
+% ── Token predicho ────────────────────────────────────────────
+\node[inp] (pred) at (5.6, -2.0) {``?''\\{\tiny token predicho}};
+\node[lbl] at (5.6, -2.75) {argmax o muestreo};
+
+% ── Flechas forward ───────────────────────────────────────────
+\draw[arrow] (chars) -- (idx);
+\draw[arrow] (idx)   -- (emb);
+\draw[arrow] (emb)   -- (pe);
+\draw[arrow] (pe)    -- (enc);
+\draw[arrow] (enc)   -- (lin);
+\draw[arrow] (lin)   -- (sft);
+\draw[arrow] (sft)   -- (pred);
+
+% ── Anotación: máscara causal ─────────────────────────────────
+\node[draw=blue!20, fill=blue!4, rounded corners, font=\tiny,
+      inner sep=4pt, align=left] at (11.2, 1.35)
+    {M\'ascara causal:\\el token $t$ solo\\ve $1,\ldots,t{-}1$};
+\draw[-{Stealth}, gray!40, thin] (11.2, 0.65) -- (11.2, 0.95);
+
+% ── Objetivo de entrenamiento ─────────────────────────────────
+\node[draw=orange!30, fill=orange!4, rounded corners, font=\tiny,
+      inner sep=5pt, align=center] at (3.0, -2.0)
+    {Entrenamiento:\\$\mathcal{L} = -\log P(c_{t+1} \mid c_1,\ldots,c_t)$\\
+     Entrop\'ia cruzada sobre el\\siguiente car\'acter correcto};
+
+% ── Flechas de flujo de la pérdida ────────────────────────────
+\draw[-{Stealth}, orange!50, dashed, thick]
+    (pred.west) -- +(-0.3, 0) -- +(-0.3, -0.7)
+    node[below, font=\tiny, orange!70] {$\hat{y}$ vs $y$};
+
+\end{tikzpicture}
+\caption{Pipeline completo del Transformer m\'inimo implementado en este
+trabajo. La secuencia de caracteres de entrada se convierte en \'indices
+enteros, se proyecta al espacio de embeddings, se le suma la codificaci\'on
+posicional, y se procesa a trav\'es de $N$ bloques encoder con m\'ascara
+causal. La proyecci\'on lineal final y el softmax producen una distribuci\'on
+de probabilidad sobre el vocabulario de caracteres. Durante el entrenamiento,
+la p\'erdida de entrop\'ia cruzada compara la predicci\'on con el siguiente
+car\'acter real de la secuencia.}
+\label{fig:pipeline_minimo}
+\end{figure}

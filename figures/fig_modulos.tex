@@ -1,0 +1,92 @@
+% ============================================================
+% fig_modulos.tex — Diagrama de dependencias entre módulos
+% Uso: \input{figures/fig_modulos}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    mod/.style={draw, rounded corners, minimum width=2.8cm,
+                minimum height=0.7cm, font=\small, align=center},
+    m1/.style={mod, fill=purple!10, draw=purple!40},
+    m2/.style={mod, fill=teal!10,   draw=teal!50},
+    m3/.style={mod, fill=blue!10,   draw=blue!40},
+    m4/.style={mod, fill=green!10,  draw=green!50!black},
+    m5/.style={mod, fill=orange!10, draw=orange!50},
+    m6/.style={mod, fill=red!8,     draw=red!40},
+    arrow/.style={-{Stealth}, thick},
+    lbl/.style={font=\tiny, gray, align=center},
+    note/.style={draw=gray!30, fill=gray!5, rounded corners,
+                 font=\tiny, inner sep=4pt, align=left}
+]
+
+% Columna izquierda: componentes base
+\node[m1] (emb)  at (0, 6.0) {Embedding\\{\tiny $E \in \mathbb{R}^{V \times d}$}};
+\node[m2] (pe)   at (0, 4.5) {Positional\\Encoding};
+\node[m3] (mha)  at (0, 3.0) {Multi-Head\\Attention};
+\node[m4] (ffn)  at (0, 1.5) {Feed-Forward\\Network};
+\node[m3] (norm) at (0, 0.0) {Layer Norm\\+ Residual};
+
+% Columna centro: EncoderBlock
+\draw[blue!20, rounded corners, thick, fill=blue!3]
+    (2.2, -0.5) rectangle (5.2, 4.0);
+\node[font=\footnotesize\bfseries, blue!60] at (3.7, 3.7)
+    {EncoderBlock $\times N$};
+\node[m3] (mha2)  at (3.7, 3.0) {MHA + Norm\\+ Residual};
+\node[m4] (ffn2)  at (3.7, 1.5) {FFN + Norm\\+ Residual};
+
+% Columna derecha: MiniTransformer
+\draw[orange!20, rounded corners, thick, fill=orange!3]
+    (6.4, -0.5) rectangle (9.8, 7.0);
+\node[font=\footnotesize\bfseries, orange!70] at (8.1, 6.7)
+    {MiniTransformer};
+\node[m1] (emb3)  at (8.1, 6.0) {Embedding};
+\node[m2] (pe3)   at (8.1, 4.8) {Pos. Encoding};
+\node[m3] (enc3)  at (8.1, 3.4) {EncoderBlock\\$\times N$};
+\node[m5] (proj)  at (8.1, 2.0) {Proyecci\'on\\lineal};
+\node[m6] (sft)   at (8.1, 0.8) {Softmax\\$\hat{P}(c_{t+1})$};
+
+% Flechas base → EncoderBlock
+\draw[arrow, blue!50] (mha.east)  -- (mha2.west);
+\draw[arrow, blue!50] (ffn.east)  -- (ffn2.west);
+\draw[arrow, gray!50] (norm.east) -| (2.4, -0.2);
+
+% Flechas base → MiniTransformer
+\draw[arrow, purple!50] (emb.east)  -- (emb3.west);
+\draw[arrow, teal!50]   (pe.east)   -| (6.6, 4.8);
+\draw[arrow, blue!50]   (3.7, -0.5) -- (3.7, -0.8) -| (8.1, 3.0);
+
+% Flechas internas MiniTransformer
+\draw[arrow] (emb3)  -- (pe3);
+\draw[arrow] (pe3)   -- (enc3);
+\draw[arrow] (enc3)  -- (proj);
+\draw[arrow] (proj)  -- (sft);
+
+% Notas laterales
+\node[note] at (-3.2, 6.0)
+    {Repr. distribuida\\de tokens (cf. SOM)};
+\draw[-{Stealth}, gray!40, thin] (-1.7, 6.0) -- (-1.45, 6.0);
+
+\node[note] at (-3.2, 4.5)
+    {Inyecta orden sin\\romper paralelismo};
+\draw[-{Stealth}, gray!40, thin] (-1.7, 4.5) -- (-1.45, 4.5);
+
+\node[note] at (-3.2, 3.0)
+    {Relaciones globales\\(cf. Hopfield)};
+\draw[-{Stealth}, gray!40, thin] (-1.7, 3.0) -- (-1.45, 3.0);
+
+\node[note] at (-3.2, 1.5)
+    {Transf. local por\\posici\'on (cf. MLP)};
+\draw[-{Stealth}, gray!40, thin] (-1.7, 1.5) -- (-1.45, 1.5);
+
+\node[note] at (-3.2, 0.0)
+    {Estabiliza gradientes\\(supera a RNN)};
+\draw[-{Stealth}, gray!40, thin] (-1.7, 0.0) -- (-1.45, 0.0);
+
+\end{tikzpicture}
+\caption{Diagrama de dependencias entre m\'odulos. Los componentes base
+(izquierda) se componen en un \texttt{EncoderBlock} (centro), que se
+apila $N$ veces dentro del \texttt{MiniTransformer} (derecha). Cada
+m\'odulo encapsula exactamente un concepto te\'orico, lo que permite
+razonar sobre cada parte de forma independiente.}
+\label{fig:modulos}
+\end{figure}

@@ -1,0 +1,58 @@
+% ============================================================
+% fig_training_loop.tex — Ciclo de entrenamiento
+% Uso: \input{figures/fig_training_loop}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    blk/.style={draw, rounded corners, minimum width=2.6cm,
+                minimum height=0.65cm, font=\small, align=center},
+    fwd/.style={blk, fill=blue!10,   draw=blue!40},
+    bwd/.style={blk, fill=red!8,     draw=red!40},
+    dat/.style={blk, fill=gray!10,   draw=gray!50},
+    opt/.style={blk, fill=green!10,  draw=green!50!black},
+    arrow/.style={-{Stealth}, thick},
+    lbl/.style={font=\tiny, gray, align=center}
+]
+
+% Nodos
+\node[dat] (batch)  at (0,    0) {Batch de\\secuencias $(x, y)$};
+\node[fwd] (fwd)    at (3.5,  0) {Forward pass\\$\hat{y} = f_\theta(x)$};
+\node[fwd] (loss)   at (7.0,  0) {P\'erdida\\$\mathcal{L}({\hat{y}}, y)$};
+\node[bwd] (bwd)    at (7.0, -1.8) {Backward pass\\$\nabla_\theta \mathcal{L}$};
+\node[opt] (clip)   at (3.5, -1.8) {Recorte de\\gradiente};
+\node[opt] (step)   at (0,   -1.8) {Paso Adam\\$\theta \leftarrow \theta - \eta \nabla$};
+
+% Flecha de retorno al inicio
+\draw[arrow, green!50!black]
+    (step.south) -- ++(0,-0.5) -- ++(8.5,0) -- ++(0,2.8)
+    node[midway, right, font=\tiny, green!60!black] {siguiente paso};
+
+% Flechas principales
+\draw[arrow] (batch) -- (fwd);
+\draw[arrow] (fwd)   -- (loss);
+\draw[arrow] (loss)  -- (bwd);
+\draw[arrow] (bwd)   -- (clip);
+\draw[arrow] (clip)  -- (step);
+
+% Anotaciones
+\node[lbl] at (1.75,  0.45) {cf. MLP:\\misma entrada};
+\node[lbl] at (5.25,  0.45) {entrop\'ia cruzada\\(siguiente car.)};
+\node[lbl] at (7.45, -0.9) {backprop\\(cf. Sec.~2)};
+\node[lbl] at (1.75, -2.25) {norma $\leq 1.0$\\evita divergencia};
+
+% Máscara causal (anotación sobre forward)
+\node[draw=blue!20, fill=blue!4, rounded corners, font=\tiny,
+      inner sep=4pt, align=center] at (3.5, 1.3)
+    {m\'ascara causal\\aplicada internamente};
+\draw[-{Stealth}, blue!30, thin] (3.5, 0.95) -- (3.5, 0.65);
+
+\end{tikzpicture}
+\caption{Ciclo de entrenamiento del Transformer m\'inimo. El flujo sigue
+el mismo esquema de backpropagation descrito en la
+Secci\'on~\ref{subsec:mlp}: forward pass, c\'alculo de p\'erdida,
+gradientes hacia atr\'as y actualizaci\'on de par\'ametros. La diferencia
+respecto a un MLP es que el forward pass incluye atenci\'on con m\'ascara
+causal, lo que permite procesar toda la secuencia en paralelo.}
+\label{fig:training_loop}
+\end{figure}

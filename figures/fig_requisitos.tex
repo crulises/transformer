@@ -1,0 +1,64 @@
+% ============================================================
+% fig_requisitos.tex — Comparación de requisitos de hardware
+% Uso: \input{figures/fig_requisitos}
+% ============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    col/.style={draw, rounded corners, minimum width=3.6cm,
+                font=\small, align=center, inner sep=8pt},
+    mini/.style={col, fill=green!8,  draw=green!50!black},
+    med/.style={col,  fill=orange!8, draw=orange!50},
+    prod/.style={col, fill=red!8,    draw=red!40},
+    hdr/.style={font=\small\bfseries, align=center},
+    row/.style={font=\footnotesize,   align=center},
+    sep/.style={gray!30}
+]
+
+% Encabezados
+\node[hdr, green!60!black]  at (1.8,  7.2) {Este trabajo};
+\node[hdr, green!60!black]  at (1.8,  6.8) {\small (prototipo m\'inimo)};
+\node[hdr, orange!70]       at (5.6,  7.2) {Escala media};
+\node[hdr, orange!70]       at (5.6,  6.8) {\small (GPT-2 small)};
+\node[hdr, red!60]          at (9.4,  7.2) {Producci\'on};
+\node[hdr, red!60]          at (9.4,  6.8) {\small (GPT-3 / LLaMA)};
+
+% Filas de comparación
+\foreach \y/\attr/\vmini/\vmed/\vprod in {
+    6.1/{Par\'ametros}/{$\sim$200K}/{$\sim$117M}/{$>$7B},
+    5.3/{RAM m\'inima}/{4~GB}/{16~GB}/{80~GB (GPU)},
+    4.5/{Hardware}/{CPU / GPU b\'asica}/{GPU 8~GB VRAM}/{GPU A100 / TPU},
+    3.7/{Tiempo (1 epoch)}/{1--5~min}/{1--2~h}/{d\'ias--semanas},
+    2.9/{Tama\~no corpus}/{MB}/{GB}/{TB},
+    2.1/{Resultado esperado}/{patrones locales}/{texto coherente}/{lenguaje general}
+}{
+    \node[font=\footnotesize\bfseries, gray, align=right] at (-0.2, \y) {\attr};
+    \node[row, green!70!black] at (1.8, \y) {\vmini};
+    \node[row, orange!70]      at (5.6, \y) {\vmed};
+    \node[row, red!60]         at (9.4, \y) {\vprod};
+    \draw[sep] (-1.2, \y-0.4) -- (11.4, \y-0.4);
+}
+
+% Líneas verticales
+\draw[sep] (3.6,  1.7) -- (3.6,  7.5);
+\draw[sep] (7.4,  1.7) -- (7.4,  7.5);
+\draw[sep] (-1.2, 1.7) -- (-1.2, 7.5);
+\draw[sep] (11.4, 1.7) -- (11.4, 7.5);
+\draw[sep] (-1.2, 7.5) -- (11.4, 7.5);
+\draw[sep] (-1.2, 1.7) -- (11.4, 1.7);
+
+% Flecha de escalado
+\draw[-{Stealth}, thick, gray!60]
+    (3.65, 0.9) -- (11.35, 0.9);
+\node[font=\footnotesize, gray] at (7.5, 0.55)
+    {misma arquitectura, mayor escala de par\'ametros y datos};
+
+\end{tikzpicture}
+\caption{Comparaci\'on de requisitos de hardware y escala entre el
+prototipo m\'inimo implementado en este trabajo, un modelo de escala
+media (GPT-2 small) y modelos de producci\'on (GPT-3, LLaMA). La
+arquitectura es id\'entica en los tres casos; la diferencia es
+exclusivamente cuantitativa: m\'as par\'ametros, m\'as datos y m\'as
+c\'omputo.}
+\label{fig:requisitos}
+\end{figure}

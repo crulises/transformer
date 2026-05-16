@@ -1,0 +1,211 @@
+\section{Especificación del Transformer mínimo}
+\label{sec:transformer_minimo}
+
+Las secciones anteriores establecieron los fundamentos teóricos del
+Transformer: el mecanismo de atención, la arquitectura completa y sus
+variantes. Esta sección define formalmente el modelo concreto que se
+implementa en el Anexo~\ref{sec:implementacion}, especificando la tarea,
+las entradas y salidas, la arquitectura y los hiperparámetros. El objetivo
+es que cada decisión de diseño sea justificable en términos de los
+conceptos teóricos ya presentados.
+
+%------------------------------------------------------------
+\subsection{Definición del problema}
+\label{subsec:def_problema}
+
+El modelo implementado resuelve la tarea de \textit{modelado de lenguaje
+a nivel carácter}: dada una secuencia de caracteres $c_1, c_2, \ldots,
+c_t$, predecir la distribución de probabilidad sobre el siguiente carácter
+$c_{t+1}$.
+
+\begin{equation}
+    P(c_{t+1} \mid c_1, c_2, \ldots, c_t)
+\end{equation}
+
+Esta tarea es representativa de los modelos de lenguaje modernos a gran
+escala, reducida a una escala manejable. Operar a nivel carácter elimina
+la necesidad de tokenizadores complejos: el vocabulario $\mathcal{V}$
+está compuesto simplemente por todos los caracteres únicos del corpus de
+entrenamiento (letras, espacios, signos de puntuación), con
+$|\mathcal{V}|$ típicamente entre 60 y 100 símbolos.
+
+La justificación de esta elección frente a alternativas más simples
+(como clasificación) es que el modelado de lenguaje autoregresivo
+requiere y ejercita todos los componentes del Transformer: embeddings,
+codificación posicional, atención con máscara causal y proyección de
+salida. Ningún componente es redundante.
+
+%------------------------------------------------------------
+\subsection{Representación de la entrada}
+\label{subsec:entrada}
+
+Cada carácter $c_t \in \mathcal{V}$ se representa como un índice entero
+$v_t \in \{0, 1, \ldots, |\mathcal{V}|-1\}$ mediante un mapeo fijo
+aprendido durante el preprocesamiento. Este índice se convierte en un
+vector denso mediante la capa de embeddings:
+
+\begin{equation}
+    \bm{e}_t = E[v_t] \quad \in \mathbb{R}^{d_{\text{model}}}
+\end{equation}
+
+\noindent donde $E \in \mathbb{R}^{|\mathcal{V}| \times d_{\text{model}}}$
+es la matriz de embeddings aprendida. A continuación se suma la
+codificación posicional sinusoidal descrita en la
+Sección~\ref{subsec:positional_encoding}:
+
+\begin{equation}
+    \bm{x}'_t = \bm{e}_t + PE_t
+\end{equation}
+
+La secuencia resultante $\bm{x}'_1, \ldots, \bm{x}'_T$ constituye la
+entrada al encoder, donde $T$ es la longitud de contexto máxima.
+
+%------------------------------------------------------------
+\subsection{Arquitectura del modelo}
+\label{subsec:arq_modelo}
+
+El modelo sigue la variante \textit{decoder-only} con máscara causal,
+que es la base arquitectónica de los modelos generativos modernos
+(familia GPT). Se elige esta variante en lugar del encoder-decoder
+original porque la tarea es de generación autoregresiva sobre una sola
+secuencia, y un encoder-decoder requeriría dos secuencias distintas
+(entrada y objetivo).
+
+Formalmente, el modelo está compuesto por:
+
+\begin{enumerate}
+    \item \textbf{Capa de embedding:}
+    $E \in \mathbb{R}^{|\mathcal{V}| \times d_{\text{model}}}$
+
+    \item \textbf{Codificación posicional sinusoidal:}
+    fija, no aprendida, sumada a los embeddings.
+
+    \item \textbf{$N$ bloques encoder con máscara causal,}
+    cada uno con:
+    \begin{itemize}
+        \item Multi-Head Self-Attention con máscara triangular inferior
+        \item Feed-Forward Network con activación ReLU
+        \item Conexiones residuales y Layer Normalization
+    \end{itemize}
+
+    \item \textbf{Proyección lineal de salida:}
+    $W_o \in \mathbb{R}^{d_{\text{model}} \times |\mathcal{V}|}$,
+    que mapea la representación final al espacio del vocabulario.
+
+    \item \textbf{Softmax:} produce la distribución de probabilidad
+    $\hat{P} \in \Delta^{|\mathcal{V}|-1}$ sobre el siguiente carácter.
+\end{enumerate}
+
+\input{figures/fig_pipeline_minimo}
+
+%------------------------------------------------------------
+\subsection{Función de pérdida y entrenamiento}
+\label{subsec:entrenamiento}
+
+El modelo se entrena minimizando la entropía cruzada entre la
+distribución predicha $\hat{P}(c_{t+1})$ y el carácter real $c_{t+1}$:
+
+\begin{equation}
+    \mathcal{L} = -\frac{1}{T} \sum_{t=1}^{T}
+    \log \hat{P}(c_{t+1} \mid c_1, \ldots, c_t)
+\end{equation}
+
+Esta pérdida se minimiza mediante descenso del gradiente con el
+optimizador Adam~\cite{goodfellow2016deeplearning}, que extiende el
+descenso del gradiente estocástico con estimaciones adaptativas de
+momentos de primer y segundo orden, acelerando la convergencia en la
+práctica.
+
+Durante el entrenamiento, la máscara causal garantiza que el modelo no
+acceda a información futura: el cómputo de $\hat{P}(c_{t+1})$ solo
+utiliza $c_1, \ldots, c_t$. Esto hace posible calcular la pérdida para
+todas las posiciones de la secuencia en paralelo, sin procesar los tokens
+uno a uno como haría una RNN.
+
+%------------------------------------------------------------
+\subsection{Especificación formal de hiperparámetros}
+\label{subsec:hiperparametros_minimo}
+
+La Tabla~\ref{tab:hiperparametros} presenta la especificación completa
+del modelo mínimo. Los valores están elegidos para que el entrenamiento
+sea viable en hardware doméstico (CPU o GPU de consumo) en minutos, sin
+sacrificar la capacidad de demostrar las propiedades fundamentales del
+Transformer.
+
+\begin{table}[H]
+\centering
+\caption{Especificación formal del Transformer mínimo implementado.}
+\label{tab:hiperparametros}
+\begin{tabularx}{\textwidth}{llXl}
+\toprule
+\textbf{Hiperparámetro} & \textbf{Notación} & \textbf{Descripción} & \textbf{Valor} \\
+\midrule
+Dimensión del modelo   & $d_{\text{model}}$ & Tamaño de embeddings y representaciones internas & 128 \\
+Número de cabezas      & $h$               & Cabezas de atención paralelas & 4 \\
+Dimensión por cabeza   & $d_k = d_v$       & $d_{\text{model}} / h$ & 32 \\
+Número de bloques      & $N$               & Bloques encoder apilados & 2 \\
+Dimensión FFN          & $d_{\text{ff}}$   & Capa interna de la red feed-forward & 512 \\
+Longitud de contexto   & $T$               & Tokens procesados simultáneamente & 64 \\
+Tasa de abandono       & $p_{\text{drop}}$ & Dropout para regularización & 0.1 \\
+Tamaño de batch        & $B$               & Secuencias por paso de actualización & 32 \\
+Tasa de aprendizaje    & $\eta$            & Paso del optimizador Adam & $3 \times 10^{-4}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Estos valores siguen el principio de que cada hiperparámetro debe ser
+justificable. En particular:
+
+\begin{itemize}
+    \item $d_{\text{model}} = 128$ es suficiente para que el modelo
+    aprenda representaciones de caracteres con estructura semántica,
+    sin requerir memoria excesiva.
+
+    \item $h = 4$ cabezas permiten capturar cuatro tipos de relaciones
+    distintas en paralelo (por ejemplo, patrones fonéticos, morfológicos,
+    sintácticos locales y dependencias de posición).
+
+    \item $N = 2$ bloques producen un modelo con dos niveles de
+    abstracción, lo que es suficiente para evidenciar el comportamiento
+    jerárquico del Transformer.
+
+    \item $T = 64$ garantiza un contexto suficiente para aprender
+    patrones de longitud de palabra y estructura de oraciones simples.
+
+    \item $d_{\text{ff}} = 512 = 4 \times d_{\text{model}}$ sigue la
+    proporción estándar propuesta por Vaswani et al.~\cite{vaswani2017attention}.
+\end{itemize}
+
+%------------------------------------------------------------
+\subsection{Comparación con modelos de producción}
+\label{subsec:comparacion_escala}
+
+Para contextualizar el modelo mínimo dentro del panorama actual, la
+Tabla~\ref{tab:escala} lo compara con modelos de lenguaje representativos.
+
+\begin{table}[H]
+\centering
+\caption{Comparación de escala entre el prototipo mínimo y modelos representativos.}
+\label{tab:escala}
+\begin{tabularx}{\textwidth}{lXXXX}
+\toprule
+\textbf{Modelo} & \textbf{$d_{\text{model}}$} & \textbf{$N$} & \textbf{$h$} & \textbf{Parámetros aprox.} \\
+\midrule
+Este trabajo (mínimo) & 128  & 2  & 4   & $\sim$200K \\
+GPT-2 small           & 768  & 12 & 12  & $\sim$117M \\
+GPT-2 large           & 1280 & 36 & 20  & $\sim$774M \\
+GPT-3                 & 12288 & 96 & 96 & $\sim$175B \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La diferencia de escala es enorme, pero los componentes son idénticos.
+El prototipo implementado en este trabajo tiene exactamente la misma
+arquitectura que GPT-2: la diferencia es únicamente cuantitativa, no
+cualitativa. Esta es la propiedad más importante del Transformer como
+arquitectura: su diseño escala de forma predecible y sin cambios
+estructurales desde los 200K parámetros de este prototipo hasta los
+175B de GPT-3~\cite{vaswani2017attention}.
+
+En este sentido, el prototipo no es una simplificación del Transformer
+real, sino el Transformer real operando a escala didáctica.
