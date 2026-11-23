@@ -69,6 +69,8 @@ Etiquetas:
 - [ ] [Referencias] Agregar Bahdanau et al. 2015
 - [ ] [Referencias] Quitar russell2020ai del .bib si no se usa
 
+- [ ] [Contenido] Ejemplos heterogeneos (banco, espia, estrella, gato y raton, Hopfield aparte): unificar con una frase ancla del corpus
+- [ ] [Contenido] Falta explicar tokenizacion antes de hablar de tokens, vocabulario y embeddings
 - [ ] [Contenido] Cap 4: falta el puente de Bahdanau, la atencion es anterior al Transformer
 - [ ] [Contenido] Cap 4: la conexion con Hopfield (04:191-195) merece subseccion propia con ejemplo numerico
 - [ ] [Contenido] Cap 3: fusionar analisis integrado y requerimientos, y mejorar la analogia con Hopfield en correferencia (03:139-144)

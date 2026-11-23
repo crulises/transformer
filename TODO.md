@@ -25,12 +25,20 @@ Etiquetas (cada una es un release que termina con PDF limpio y tag de git):
 
 - [x] [R1] Scripts de verificacion en verify/ y make verify
 - [x] [R1] Cero errores y warnings revisados uno por uno
+- [ ] [R1] Definir la frase ancla y el corpus del hilo conductor
+- [ ] [R1] Rehacer con la frase ancla las figuras de los caps 3 y 4: ambiguedad, dependencias, ejemplo_contexto, atencion_intuicion, qkv, atencion_ejemplo, multihead
 - [ ] [R1] Crear la figura real de codificacion posicional
 - [ ] [R1] Revisar visualmente cada figura compilada sola
 - [ ] [R1] Formalizar la paleta con \colorlet en el preambulo
 - [ ] [R1] Portada: universidad, docente y fecha fija Diciembre 2026
 - [ ] [R1] Tag r1
 
+- [ ] [R2] Nueva seccion De texto a tokens entre el cap 2 y el cap 3: que es un token, niveles (palabra, subpalabra, caracter), construccion del vocabulario, ejemplo con la frase ancla
+- [ ] [R2] Ejemplo breve de BPE en la seccion de tokens y por que el prototipo usa caracteres
+- [ ] [R2] Figura fig_hilo_conductor: la frase ancla recorriendo tokens, ids, embeddings, posicion, atencion, bloque y siguiente caracter
+- [ ] [R2] Introduccion: mapa del recorrido con fig_hilo_conductor
+- [ ] [R2] Cada capitulo abre indicando en que etapa del hilo conductor estamos
+- [ ] [R2] Reemplazar los ejemplos sueltos (banco, espia, estrella, gato y raton) por la frase ancla o fragmentos de ella
 - [ ] [R2] Cap 3: revisar y hacer mas ameno
 - [ ] [R2] Cap 4: revisar y agregar puente de Bahdanau antes de Q, K, V
 - [ ] [R2] Cap 4: figura de la mascara causal como matriz triangular sobre los scores del ejemplo
@@ -46,7 +54,8 @@ Etiquetas (cada una es un release que termina con PDF limpio y tag de git):
 - [ ] [R3] Tag r3
 
 - [ ] [R4] Reorganizar el monorepo en paper/ y code/
-- [ ] [R4] Elegir corpus: espanol de dominio publico o Tiny Shakespeare
+- [ ] [R4] Corpus: Don Quijote de la Mancha (dominio publico) sin cabecera ni licencia de Gutenberg
+- [ ] [R4] Modulo de tokenizacion por caracteres con el vocabulario construido del corpus
 - [ ] [R4] Un modulo por concepto: embeddings, positional encoding, atencion, bloque, modelo, entrenamiento, generacion
 - [ ] [R4] Python con versiones fijadas y semilla fija en el contenedor
 - [ ] [R4] Tests que reproducen los ejemplos numericos del paper
@@ -56,5 +65,6 @@ Etiquetas (cada una es un release que termina con PDF limpio y tag de git):
 - [ ] [R4] Tag r4
 
 - [ ] [R5] Elevar el documento a formato paper con teoria y practica implementada
+- [ ] [R5] Guion de defensa en orden inverso: del texto generado hacia atras, explicando que parte hace posible cada otra
 - [ ] [R5] Presentacion o guion de defensa
 - [ ] [R5] Ejemplos corriendo del proyecto aparte de Uli
