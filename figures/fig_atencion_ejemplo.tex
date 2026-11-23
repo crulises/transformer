@@ -1,5 +1,5 @@
 % ============================================================
-% fig_atencion_ejemplo.tex — Ejemplo numérico Q, K, V (3 tokens)
+% fig_atencion_ejemplo.tex: Ejemplo numérico Q, K, V (3 tokens)
 % Uso: \input{figures/fig_atencion_ejemplo}
 % ============================================================
 \begin{figure}[H]
@@ -19,7 +19,7 @@
 
 \node[font=\small\bfseries, gray] at (5.0, 8.5)
     {Secuencia: \textit{gato} $(t_1)$ \quad \textit{comi\'o} $(t_2)$ \quad
-     \textit{rat\'on} $(t_3)$ \quad --- \quad $d_k = d_v = 2$};
+     \textit{rat\'on} $(t_3)$ \quad $|$ \quad $d_k = d_v = 2$};
 
 % ── PASO 1: Matrices Q, K, V ─────────────────────────────────
 \node[stepnode] at (-0.5, 7.7) {Paso 1};
@@ -68,9 +68,9 @@
 \foreach \lbl/\y in {$t_1$/3.85, $t_2$/3.20, $t_3$/2.55}{
     \node[font=\footnotesize] at (4.9, \y) {\lbl};
 }
-\node[cell,ac] at (5.6,3.85){0.37}; \node[cell,ac] at (6.7,3.85){0.37}; \node[cell,ac] at (7.8,3.85){0.26};
-\node[cell,ac] at (5.6,3.20){0.26}; \node[cell,ac] at (6.7,3.20){0.37}; \node[cell,ac] at (7.8,3.20){0.37};
-\node[cell,ac] at (5.6,2.55){0.24}; \node[cell,ac] at (6.7,2.55){0.52}; \node[cell,ac] at (7.8,2.55){0.24};
+\node[cell,ac] at (5.6,3.85){0.40}; \node[cell,ac] at (6.7,3.85){0.40}; \node[cell,ac] at (7.8,3.85){0.20};
+\node[cell,ac] at (5.6,3.20){0.20}; \node[cell,ac] at (6.7,3.20){0.40}; \node[cell,ac] at (7.8,3.20){0.40};
+\node[cell,ac] at (5.6,2.55){0.25}; \node[cell,ac] at (6.7,2.55){0.50}; \node[cell,ac] at (7.8,2.55){0.25};
 
 % ── PASO 4: Z = A·V ──────────────────────────────────────────
 \node[stepnode] at (3.0, 1.85) {Paso 4};
@@ -81,8 +81,8 @@
 \foreach \lbl/\y in {$z_1$/0.90, $z_2$/0.25, $z_3$/-0.40}{
     \node[font=\footnotesize] at (3.8, \y) {\lbl};
 }
-\node[cell,zc] at (4.6, 0.90){0.56}; \node[cell,zc] at (5.7, 0.90){0.44};
-\node[cell,zc] at (4.6, 0.25){0.44}; \node[cell,zc] at (5.7, 0.25){0.56};
+\node[cell,zc] at (4.6, 0.90){0.60}; \node[cell,zc] at (5.7, 0.90){0.40};
+\node[cell,zc] at (4.6, 0.25){0.40}; \node[cell,zc] at (5.7, 0.25){0.60};
 \node[cell,zc] at (4.6,-0.40){0.50}; \node[cell,zc] at (5.7,-0.40){0.50};
 
 \draw[-{Stealth}, thick, gray!60]

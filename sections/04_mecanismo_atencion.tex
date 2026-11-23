@@ -122,11 +122,13 @@ interpretable.
 \input{figures/fig_atencion_ejemplo}
 
 La fila $i$ de la salida $Z$ contiene la representación contextualizada
-del token $i$. El token \textit{comió} ($t_2$) obtiene pesos similares
-hacia \textit{gato} (0.37) y \textit{ratón} (0.37), reflejando que ambos
-son igualmente relevantes para el verbo: uno como sujeto y el otro como
-objeto. Este resultado emerge naturalmente del producto escalar entre
-vectores, sin reglas explícitas.
+del token $i$. Por ejemplo, la fila de \textit{comió} ($t_2$) de la matriz de
+pesos es $(0.20,\, 0.40,\, 0.40)$: el verbo reparte su atención por igual
+entre sí mismo y \textit{ratón}, y le presta menos a \textit{gato}. Su
+representación $z_2 = (0.40,\, 0.60)$ es entonces una mezcla de los valores
+de los tres tokens en esas proporciones. Este resultado emerge del producto
+escalar entre vectores, sin reglas explícitas. Los valores de $Q$, $K$ y $V$
+son ilustrativos: en un modelo real los aprende el entrenamiento.
 
 %------------------------------------------------------------
 \subsection{Atención multi-cabeza}
@@ -199,8 +201,8 @@ El mecanismo de atención generaliza varios conceptos ya estudiados:
     refleja similitud semántica, análogos a los mapas de Kohonen.
 
     \item \textbf{MLP}: las proyecciones $W_Q$, $W_K$, $W_V$ son
-    transformaciones lineales aprendidas —el mismo bloque fundamental
-    de los MLPs— pero utilizadas aquí para construir representaciones
+    transformaciones lineales aprendidas (el mismo bloque fundamental
+    de los MLPs), pero utilizadas aquí para construir representaciones
     relacionales en lugar de clasificar directamente.
 \end{itemize}
 

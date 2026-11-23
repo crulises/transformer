@@ -12,19 +12,23 @@ PLATFORM ?=
 RUN = $(DOCKER) run --rm $(if $(PLATFORM),--platform $(PLATFORM)) \
       -u $(shell id -u):$(shell id -g) -e HOME=/tmp -v "$(CURDIR)":/work $(IMAGE)
 
-.PHONY: help docker-build pdf pdf-local check check-local figures figures-local watch clean cleanall view
+.PHONY: verify help docker-build pdf pdf-local check check-local figures figures-local watch clean cleanall view
 
 help:
 	@echo "docker-build  construye la imagen de compilacion"
 	@echo "pdf           compila build/main.pdf dentro del contenedor (oficial)"
 	@echo "pdf-local     compila con el TeX del sistema (iteracion rapida)"
 	@echo "check         pdf + falla ante errores, refs/citas indefinidas, labels duplicadas"
+	@echo "verify        ejecuta los scripts de verify/ (requiere python3)"
 	@echo "figures       compila cada figura sola y exporta PNG a build/figcheck/"
 	@echo "watch         recompila al guardar (local)"
 	@echo "clean         borra auxiliares (deja el PDF); cleanall borra todo build/"
 
 docker-build:
 	$(DOCKER) build $(if $(PLATFORM),--platform $(PLATFORM)) -t $(IMAGE) .
+
+verify:
+	@sh verify/run_all.sh
 
 pdf: ; $(RUN) make pdf-local
 check: ; $(RUN) make check-local

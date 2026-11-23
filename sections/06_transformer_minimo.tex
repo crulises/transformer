@@ -4,7 +4,7 @@
 Las secciones anteriores establecieron los fundamentos teóricos del
 Transformer: el mecanismo de atención, la arquitectura completa y sus
 variantes. Esta sección define formalmente el modelo concreto que se
-implementa en el Anexo~\ref{sec:implementacion}, especificando la tarea,
+implementa (ver el repositorio), especificando la tarea,
 las entradas y salidas, la arquitectura y los hiperparámetros. El objetivo
 es que cada decisión de diseño sea justificable en términos de los
 conceptos teóricos ya presentados.
@@ -126,7 +126,7 @@ uno a uno como haría una RNN.
 \subsection{Especificación formal de hiperparámetros}
 \label{subsec:hiperparametros_minimo}
 
-La Tabla~\ref{tab:hiperparametros} presenta la especificación completa
+La Tabla~\ref{tab:hiperparametros_minimo} presenta la especificación completa
 del modelo mínimo. Los valores están elegidos para que el entrenamiento
 sea viable en hardware doméstico (CPU o GPU de consumo) en minutos, sin
 sacrificar la capacidad de demostrar las propiedades fundamentales del
@@ -135,7 +135,7 @@ Transformer.
 \begin{table}[H]
 \centering
 \caption{Especificación formal del Transformer mínimo implementado.}
-\label{tab:hiperparametros}
+\label{tab:hiperparametros_minimo}
 \begin{tabularx}{\textwidth}{llXl}
 \toprule
 \textbf{Hiperparámetro} & \textbf{Notación} & \textbf{Descripción} & \textbf{Valor} \\
@@ -191,7 +191,7 @@ Tabla~\ref{tab:escala} lo compara con modelos de lenguaje representativos.
 \toprule
 \textbf{Modelo} & \textbf{$d_{\text{model}}$} & \textbf{$N$} & \textbf{$h$} & \textbf{Parámetros aprox.} \\
 \midrule
-Este trabajo (mínimo) & 128  & 2  & 4   & $\sim$200K \\
+Este trabajo (mínimo) & 128  & 2  & 4   & $\sim$0.41M \\
 GPT-2 small           & 768  & 12 & 12  & $\sim$117M \\
 GPT-2 large           & 1280 & 36 & 20  & $\sim$774M \\
 GPT-3                 & 12288 & 96 & 96 & $\sim$175B \\
@@ -199,13 +199,16 @@ GPT-3                 & 12288 & 96 & 96 & $\sim$175B \\
 \end{tabularx}
 \end{table}
 
-La diferencia de escala es enorme, pero los componentes son idénticos.
-El prototipo implementado en este trabajo tiene exactamente la misma
-arquitectura que GPT-2: la diferencia es únicamente cuantitativa, no
-cualitativa. Esta es la propiedad más importante del Transformer como
-arquitectura: su diseño escala de forma predecible y sin cambios
-estructurales desde los 200K parámetros de este prototipo hasta los
-175B de GPT-3~\cite{vaswani2017attention}.
+La diferencia de escala es enorme, pero los componentes son los mismos.
+El prototipo pertenece a la misma familia decoder-only que GPT-2: atención
+multi-cabeza con máscara causal, red feed-forward, conexiones residuales y
+normalización de capa. Difiere en detalles de implementación (GPT-2 usa
+posiciones aprendidas, activación GELU y normalización previa a cada
+sub-capa), pero no en la idea. Esta es la propiedad más importante del
+Transformer como arquitectura: su diseño escala de forma predecible y sin
+cambios estructurales desde los $\sim$0.41M parámetros de este prototipo
+(calculados en \texttt{verify/parametros.py} para un vocabulario de 65
+caracteres) hasta los 175B de GPT-3~\cite{vaswani2017attention}.
 
 En este sentido, el prototipo no es una simplificación del Transformer
-real, sino el Transformer real operando a escala didáctica.
+real, sino el mismo modelo operando a escala didáctica.

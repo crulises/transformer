@@ -57,7 +57,7 @@ ambigüedad ocurre a múltiples niveles:
 La consecuencia directa para el modelado es que no existe una representación
 fija correcta para un token: su significado es una función de su contexto.
 Un modelo que asigne a cada token un vector de representación estático
-—independiente del resto de la secuencia— no puede resolver esta ambigüedad.
+(independiente del resto de la secuencia) no puede resolver esta ambigüedad.
 Esto descarta, en principio, cualquier arquitectura sin mecanismo de
 contextualización dinámica.
 
@@ -107,8 +107,8 @@ fundamental. Considérense los pares:
 
 Ambos pares contienen exactamente los mismos tokens; el significado cambia
 radicalmente con el orden. Esto implica que cualquier modelo que procese los
-tokens como un conjunto desordenado —es decir, que sea \textit{invariante a
-permutaciones}— es estructuralmente incapaz de modelar lenguaje de forma
+tokens como un conjunto desordenado (es decir, que sea \textit{invariante a
+permutaciones}) es estructuralmente incapaz de modelar lenguaje de forma
 correcta~\cite{goodfellow2016deeplearning}.
 
 Los MLPs son invariantes a permutaciones salvo que la posición esté
@@ -116,7 +116,7 @@ codificada explícitamente en la entrada. Las RNNs incorporan el orden
 implícitamente a través del estado oculto secuencial, pero al costo de
 procesar los tokens uno a uno. Los Transformers deben resolver este problema
 de una tercera forma: codificando el orden \textit{explícitamente} sin
-sacrificar el paralelismo. Esta solución —la codificación posicional— se
+sacrificar el paralelismo. Esta solución, la codificación posicional, se
 describe en la Sección~\ref{sec:arquitectura_transformer}.
 
 %------------------------------------------------------------

@@ -23,10 +23,11 @@ Etiquetas (cada una es un release que termina con PDF limpio y tag de git):
 - [ ] [R0] Probar el workflow en GitHub
 - [ ] [R0] Tag r0
 
-- [ ] [R1] Cero errores y warnings revisados uno por uno
+- [x] [R1] Scripts de verificacion en verify/ y make verify
+- [x] [R1] Cero errores y warnings revisados uno por uno
+- [ ] [R1] Crear la figura real de codificacion posicional
 - [ ] [R1] Revisar visualmente cada figura compilada sola
 - [ ] [R1] Formalizar la paleta con \colorlet en el preambulo
-- [ ] [R1] Scripts de verificacion en verify/: atencion, Hopfield, positional encoding, parametros, GPT-3
 - [ ] [R1] Portada: universidad, docente y fecha fija Diciembre 2026
 - [ ] [R1] Tag r1
 
@@ -40,6 +41,7 @@ Etiquetas (cada una es un release que termina con PDF limpio y tag de git):
 
 - [ ] [R3] Escribir 07_conclusiones.tex
 - [ ] [R3] Reescribir el anexo conceptual y reactivar su \input
+- [ ] [R3] Reactivar las referencias comentadas a conclusiones y anexo en la introduccion y el cap 6
 - [ ] [R3] Revisar abstract y referencias cruzadas
 - [ ] [R3] Tag r3
 
