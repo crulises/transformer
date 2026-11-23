@@ -20,7 +20,7 @@ Etiquetas (cada una es un release que termina con PDF limpio y tag de git):
 - [x] [R0] README para macOS y contenedor
 - [x] [R0] preamble.tex separado de main.tex y csquotes agregado
 - [x] [R0] GitHub Actions: compila en el contenedor y publica el PDF como artifact
-- [ ] [R0] Probar el workflow en GitHub
+- [x] [R0] Probar el workflow en GitHub
 - [ ] [R0] Tag r0
 
 - [x] [R1] Scripts de verificacion en verify/ y make verify
