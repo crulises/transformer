@@ -9,9 +9,9 @@
                 minimum height=0.7cm, font=\small, align=center},
     inp/.style={blk, fill=gray!10,    draw=gray!50},
     emb/.style={blk, fill=purple!10,  draw=purple!40},
-    pos/.style={blk, fill=teal!10,    draw=teal!50},
+    posblk/.style={blk, fill=teal!10,    draw=teal!50},
     enc/.style={blk, fill=blue!10,    draw=blue!40},
-    out/.style={blk, fill=orange!10,  draw=orange!50},
+    outblk/.style={blk, fill=orange!10,  draw=orange!50},
     sft/.style={blk, fill=green!10,   draw=green!50!black},
     arrow/.style={-{Stealth}, thick},
     lbl/.style={font=\tiny, gray, align=center}
@@ -30,7 +30,7 @@
 \node[lbl] at (5.6, -0.75) {$E \in \mathbb{R}^{|\mathcal{V}| \times d}$};
 
 % ── Positional Encoding ───────────────────────────────────────
-\node[pos] (pe) at (8.4, 0) {Positional\\Encoding};
+\node[posblk] (pe) at (8.4, 0) {Positional\\Encoding};
 \node[lbl] at (8.4, -0.75) {$\bm{x}'_t = \bm{e}_t + PE_t$};
 
 % ── Encoder (N bloques) ───────────────────────────────────────
@@ -38,7 +38,7 @@
 \node[lbl] at (11.2, -0.75) {MHA + FFN + Norm};
 
 % ── Proyección lineal ─────────────────────────────────────────
-\node[out] (lin) at (11.2, -2.0) {Linear\\{\tiny $\mathbb{R}^{d} \to \mathbb{R}^{|\mathcal{V}|}$}};
+\node[outblk] (lin) at (11.2, -2.0) {Linear\\{\tiny $\mathbb{R}^{d} \to \mathbb{R}^{|\mathcal{V}|}$}};
 
 % ── Softmax ──────────────────────────────────────────────────
 \node[sft] (sft) at (8.4, -2.0) {Softmax};

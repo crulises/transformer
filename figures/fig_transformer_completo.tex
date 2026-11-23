@@ -12,7 +12,7 @@
     norm/.style={blk, fill=orange!10, draw=orange!50,
                  minimum height=0.5cm},
     emb/.style={blk, fill=purple!10, draw=purple!40},
-    out/.style={blk, fill=red!8, draw=red!40},
+    outblk/.style={blk, fill=red!8, draw=red!40},
     add/.style={draw, circle, fill=yellow!20, draw=yellow!60!black,
                 minimum size=0.42cm, font=\scriptsize\bfseries},
     arrow/.style={-{Stealth}, thick},
@@ -109,8 +109,8 @@
     {$K$, $V$ del\\encoder};
 
 % ── Salida final ──────────────────────────────────────────────
-\node[out]  (linear)  at (3.2, 9.8)  {Linear};
-\node[out]  (softmax) at (3.2, 10.5) {Softmax};
+\node[outblk]  (linear)  at (3.2, 9.8)  {Linear};
+\node[outblk]  (softmax) at (3.2, 10.5) {Softmax};
 \node[lbl]           at (3.2, 11.1)  {probabilidades de salida};
 
 \draw[arrow] (add3d)  -- (linear);

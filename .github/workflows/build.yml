@@ -1,0 +1,32 @@
+name: build-pdf
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pdf:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Construir imagen (con cache)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: transformers-paper
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Compilar PDF
+        run: docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/work transformers-paper make pdf-local
+      - name: Verificar (errores, referencias y citas indefinidas)
+        # Pasa a bloqueante cuando termine R1.
+        continue-on-error: true
+        run: docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/work transformers-paper make check-local
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: transformers-pdf
+          path: build/main.pdf
+          retention-days: 30
